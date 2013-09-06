@@ -23,6 +23,7 @@ function formatDateWithChunks(date, chunks) {
 
 
 // addition formatting tokens we want recognized
+// TODO: change at "aa" and "AA"
 var tokenOverrides = {
 	t: function(date) { // "a" or "p"
 		return date.format('a').charAt(0);
@@ -141,6 +142,7 @@ var similarUnitMap = {
 	d: 'day' // day of week
 };
 // don't go any further than day, because we don't want to break apart times like "12:30:00"
+// TODO: week maybe?
 
 
 // Given a formatting chunk, and given that both dates are similar in the regard the
@@ -187,7 +189,7 @@ function getFormatStringChunks(formatStr) {
 // Break the formatting string into an array of chunks
 function chunkFormatString(formatStr) {
 	var chunks = [];
-	var chunker = /\[([^\]]*)\]|\(([^\)]*)\)|((\w)\4*o?T?)|([^\w\[\(]+)/g;
+	var chunker = /\[([^\]]*)\]|\(([^\)]*)\)|((\w)\4*o?T?)|([^\w\[\(]+)/g; // TODO: more descrimination
 	var match;
 
 	while (match = chunker.exec(formatStr)) {
