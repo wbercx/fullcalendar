@@ -2,5 +2,6 @@
   "day": "Dag",
   "week": "Week",
   "month": "Maand",
-  "list": "Agenda"
+  "list": "Agenda",
+  "all-day": "Hele dag"
 }

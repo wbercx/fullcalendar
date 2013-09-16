@@ -2,5 +2,6 @@
   "day": "Päivä",
   "week": "Viikko",
   "month": "Kuukausi",
-  "list": "Tapahtumat"
+  "list": "Tapahtumat",
+  "all-day": "Koko päivä"
 }

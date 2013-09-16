@@ -2,5 +2,6 @@
   "day": "Tag",
   "week": "Woche",
   "month": "Monat",
-  "list": "Terminübersicht"
+  "list": "Terminübersicht",
+  "all-day": "Ganztägig"
 }

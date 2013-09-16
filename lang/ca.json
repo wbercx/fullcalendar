@@ -2,5 +2,6 @@
   "day": "Dia",
   "week": "Setmana",
   "month": "Mes",
-  "list": "Agenda"
+  "list": "Agenda",
+  "all-day": "Tot el dia"
 }

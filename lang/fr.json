@@ -2,5 +2,6 @@
   "day": "Jour",
   "week": "Semaine",
   "month": "Mois",
-  "list": "Mon planning"
+  "list": "Mon planning",
+  "all-day": "Toute la journée"
 }

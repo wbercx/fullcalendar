@@ -2,5 +2,6 @@
   "day": "Dag",
   "week": "Vecka",
   "month": "Månad",
-  "list": "Program"
+  "list": "Program",
+  "all-day": "Heldag"
 }

@@ -61,7 +61,6 @@ function getFCLangData(code) {
 		text = fs.readFileSync(path, { encoding: 'utf8' });
 	}
 	catch (ex) {
-		code = code.replace(/-.*/, '');
 		return false;
 	}
 
