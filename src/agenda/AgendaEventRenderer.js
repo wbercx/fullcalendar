@@ -42,8 +42,7 @@ function AgendaEventRenderer() {
 	var clearOverlays = t.clearOverlays;
 	var renderDayEvents = t.renderDayEvents;
 	var calendar = t.calendar;
-	var formatDate = calendar.formatDate;
-	var formatDates = calendar.formatDates;
+	var formatRange = calendar.formatRange;
 
 
 	// overrides
@@ -87,22 +86,19 @@ function AgendaEventRenderer() {
 			minMinute = getMinMinute(),
 			maxMinute = getMaxMinute(),
 			d,
-			visEventEnds = $.map(events, slotEventEnd),
 			i,
 			j, seg,
 			colSegs,
 			segs = [];
 
 		for (i=0; i<colCnt; i++) {
-
 			d = cellToDate(0, i);
-			addMinutes(d, minMinute);
+			d.add('minutes', minMinute);
 
 			colSegs = sliceSegs(
 				events,
-				visEventEnds,
 				d,
-				addMinutes(cloneDate(d), maxMinute-minMinute)
+				d.clone().add('minutes', maxMinute-minMinute)
 			);
 
 			colSegs = placeSlotSegs(colSegs); // returns a new order
@@ -118,26 +114,30 @@ function AgendaEventRenderer() {
 	}
 
 
-	function sliceSegs(events, visEventEnds, start, end) {
+	function sliceSegs(events, start, end) {
 		var segs = [],
 			i, len=events.length, event,
 			eventStart, eventEnd,
 			segStart, segEnd,
 			isStart, isEnd;
 		for (i=0; i<len; i++) {
+
 			event = events[i];
-			eventStart = event.start;
-			eventEnd = visEventEnds[i];
+
+			// ideals
+			eventStart = calendar.idealMoment(event.start);
+			eventEnd = calendar.idealMoment(slotEventEnd(event));
+
 			if (eventEnd > start && eventStart < end) {
 				if (eventStart < start) {
-					segStart = cloneDate(start);
+					segStart = start;
 					isStart = false;
 				}else{
 					segStart = eventStart;
 					isStart = true;
 				}
 				if (eventEnd > end) {
-					segEnd = cloneDate(end);
+					segEnd = end;
 					isEnd = false;
 				}else{
 					segEnd = eventEnd;
@@ -145,22 +145,24 @@ function AgendaEventRenderer() {
 				}
 				segs.push({
 					event: event,
-					start: segStart,
-					end: segEnd,
+					start: segStart.clone(),
+					end: segEnd.clone(),
 					isStart: isStart,
 					isEnd: isEnd
 				});
 			}
 		}
+
 		return segs.sort(compareSlotSegs);
 	}
 
 
 	function slotEventEnd(event) {
 		if (event.end) {
-			return cloneDate(event.end);
-		}else{
-			return addMinutes(cloneDate(event.start), opt('defaultEventMinutes'));
+			return event.end.clone();
+		}
+		else {
+			return event.start.clone().add('minutes', opt('defaultEventMinutes'));
 		}
 	}
 	
@@ -330,6 +332,7 @@ function AgendaEventRenderer() {
 		}else{
 			html += "div";
 		}
+
 		html +=
 			" class='" + classes.join(' ') + "'" +
 			" style=" +
@@ -341,14 +344,22 @@ function AgendaEventRenderer() {
 				"'" +
 			">" +
 			"<div class='fc-event-inner'>" +
-			"<div class='fc-event-time'>" +
-			htmlEscape(formatDates(event.start, event.end, opt('timeFormat'))) +
+			"<div class='fc-event-time'>";
+
+		if (event.end) {
+			html += htmlEscape(formatRange(event.start, event.end, opt('timeFormat')));
+		}else{
+			html += htmlEscape(formatDate(event.start, opt('timeFormat')));
+		}
+
+		html +=
 			"</div>" +
 			"<div class='fc-event-title'>" +
 			htmlEscape(event.title || '') +
 			"</div>" +
 			"</div>" +
 			"<div class='fc-event-bg'></div>";
+
 		if (seg.isEnd && isEventResizable(event)) {
 			html +=
 				"<div class='ui-resizable-handle ui-resizable-s'>=</div>";
@@ -404,12 +415,12 @@ function AgendaEventRenderer() {
 						revert = false;
 						var origDate = cellToDate(0, origCell.col);
 						var date = cellToDate(0, cell.col);
-						dayDelta = dayDiff(date, origDate);
+						dayDelta = date.diff(origDate, 'days');
 						if (!cell.row) {
 							// on full-days
 							renderDayOverlay(
-								addDays(cloneDate(event.start), dayDelta),
-								addDays(exclEndDay(event), dayDelta)
+								event.start.clone().add('days', dayDelta),
+								exclEndDay(event).add('days', dayDelta)
 							);
 							resetElement();
 						}else{
@@ -421,7 +432,7 @@ function AgendaEventRenderer() {
 									setOuterHeight(
 										eventElement,
 										snapHeight * Math.round(
-											(event.end ? ((event.end - event.start) / MINUTE_MS) : opt('defaultEventMinutes')) /
+											(event.end ? event.end.diff(event.start, 'minutes') : opt('defaultEventMinutes')) /
 												snapMinutes
 										)
 									);
@@ -456,7 +467,7 @@ function AgendaEventRenderer() {
 						minuteDelta = Math.round((eventElement.offset().top - getSlotContainer().offset().top) / snapHeight)
 							* snapMinutes
 							+ minMinute
-							- (event.start.getHours() * 60 + event.start.getMinutes());
+							- (event.start.hours() * 60 + event.start.minutes());
 					}
 					eventDrop(this, event, dayDelta, minuteDelta, allDay, ev, ui);
 				}
@@ -539,7 +550,7 @@ function AgendaEventRenderer() {
 						col = Math.max(0, col);
 						col = Math.min(colCnt-1, col);
 						var date = cellToDate(0, col);
-						dayDelta = dayDiff(date, origDate);
+						dayDelta = date.diff(origDate, 'days');
 					}
 
 					// calculate minute delta (only if over slots)
@@ -606,8 +617,8 @@ function AgendaEventRenderer() {
 					timeElement.hide();
 					eventElement.draggable('option', 'grid', null); // disable grid snapping
 					renderDayOverlay(
-						addDays(cloneDate(event.start), dayDelta),
-						addDays(exclEndDay(event), dayDelta)
+						event.start.clone().add('days', dayDelta),
+						exclEndDay(event).add('days', dayDelta)
 					);
 				}
 				else {
@@ -619,12 +630,19 @@ function AgendaEventRenderer() {
 		}
 
 		function updateTimeText(minuteDelta) {
-			var newStart = addMinutes(cloneDate(event.start), minuteDelta);
+			var newStart = event.start.clone().add('minutes', minuteDelta);
 			var newEnd;
+			var text;
+
 			if (event.end) {
-				newEnd = addMinutes(cloneDate(event.end), minuteDelta);
+				newEnd = event.end.clone().add('minutes', minuteDelta);
+				text = formatRange(newStart, newEnd, opt('timeFormat'));
 			}
-			timeElement.text(formatDates(newStart, newEnd, opt('timeFormat')));
+			else {
+				text = formatDate(newStart, opt('timeFormat'));
+			}
+
+			timeElement.text(text);
 		}
 
 	}
@@ -653,14 +671,18 @@ function AgendaEventRenderer() {
 				// don't rely on ui.size.height, doesn't take grid into account
 				snapDelta = Math.round((Math.max(snapHeight, eventElement.height()) - ui.originalSize.height) / snapHeight);
 				if (snapDelta != prevSnapDelta) {
-					timeElement.text(
-						formatDates(
+					var text;
+					if (snapDelta || event.end) {
+						text = formatRange(
 							event.start,
-							(!snapDelta && !event.end) ? null : // no change, so don't display time range
-								addMinutes(eventEnd(event), snapMinutes*snapDelta),
+							eventEnd(event).add('minutes', snapMinutes*snapDelta),
 							opt('timeFormat')
-						)
-					);
+						);
+					}
+					else {
+						text = formatDate(event.start, opt('timeFormat'));
+					}
+					timeElement.text(text);
 					prevSnapDelta = snapDelta;
 				}
 			},

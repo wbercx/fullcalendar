@@ -1,7 +1,6 @@
 
 fcViews.agendaDay = AgendaDayView;
 
-
 function AgendaDayView(element, calendar) {
 	var t = this;
 	
@@ -12,28 +11,20 @@ function AgendaDayView(element, calendar) {
 	
 	// imports
 	AgendaView.call(t, element, calendar, 'agendaDay');
-	var opt = t.opt;
-	var renderAgenda = t.renderAgenda;
-	var skipHiddenDays = t.skipHiddenDays;
-	var formatDate = calendar.formatDate;
-	
-	
+
+
 	function render(date, delta) {
 
 		if (delta) {
-			addDays(date, delta);
+			date.add('days', delta).startOf('day');
 		}
-		skipHiddenDays(date, delta < 0 ? -1 : 1);
 
-		var start = cloneDate(date, true);
-		var end = addDays(cloneDate(start), 1);
+		t.skipHiddenDays(date, delta < 0 ? -1 : 1);
 
-		t.title = formatDate(date, opt('titleFormat'));
+		t.start = t.intervalStart = date.clone().startOf('day');
+		t.end = t.intervalEnd = t.start.clone().add('days', 1);
 
-		t.start = t.visStart = start;
-		t.end = t.visEnd = end;
-
-		renderAgenda(1);
+		t.renderAgenda(1);
 	}
 	
 

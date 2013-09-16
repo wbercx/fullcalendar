@@ -11,51 +11,31 @@ function MonthView(element, calendar) {
 	
 	// imports
 	BasicView.call(t, element, calendar, 'month');
-	var opt = t.opt;
-	var renderBasic = t.renderBasic;
-	var skipHiddenDays = t.skipHiddenDays;
-	var getCellsPerWeek = t.getCellsPerWeek;
-	var formatDate = calendar.formatDate;
-	
-	
+
+
 	function render(date, delta) {
 
 		if (delta) {
-			addMonths(date, delta);
-			date.setDate(1);
+			date.add('months', delta).startOf('month');
 		}
 
-		var firstDay = opt('firstDay');
+		t.intervalStart = date.clone().startOf('month');
+		t.intervalEnd = t.intervalStart.clone().add('months', 1);
 
-		var start = cloneDate(date, true);
-		start.setDate(1);
+		t.start = t.intervalStart.clone().startOf('week');
+		t.end = t.intervalEnd.clone().startOf('week').add('weeks', 1);
 
-		var end = addMonths(cloneDate(start), 1);
+		t.skipHiddenDays(t.start);
+		t.skipHiddenDays(t.end, -1, true);
 
-		var visStart = cloneDate(start);
-		addDays(visStart, -((visStart.getDay() - firstDay + 7) % 7));
-		skipHiddenDays(visStart);
+		var rowCnt = t.end.diff(t.start, 'weeks');
 
-		var visEnd = cloneDate(end);
-		addDays(visEnd, (7 - visEnd.getDay() + firstDay) % 7);
-		skipHiddenDays(visEnd, -1, true);
-
-		var colCnt = getCellsPerWeek();
-		var rowCnt = Math.round(dayDiff(visEnd, visStart) / 7); // should be no need for Math.round
-
-		if (opt('weekMode') == 'fixed') {
-			addDays(visEnd, (6 - rowCnt) * 7); // add weeks to make up for it
+		if (t.opt('weekMode') == 'fixed') {
+			t.end.add('weeks', 6 - rowCnt);
 			rowCnt = 6;
 		}
 
-		t.title = formatDate(start, opt('titleFormat'));
-
-		t.start = start;
-		t.end = end;
-		t.visStart = visStart;
-		t.visEnd = visEnd;
-
-		renderBasic(rowCnt, colCnt, true);
+		t.renderBasic(rowCnt, t.getCellsPerWeek(), true);
 	}
 	
 	

@@ -4,13 +4,10 @@
  * (c) <%= meta.copyright %>
  */
  
-(function($) {
+(function($) { // TODO: deal with moment dependency and UMD
 
 
 var fc = $.fullCalendar;
-var formatDate = fc.formatDate;
-var parseISO8601 = fc.parseISO8601;
-var addDays = fc.addDays;
 var applyAll = fc.applyAll;
 
 
@@ -37,13 +34,13 @@ function transformOptions(sourceOptions, start, end) {
 
 	var success = sourceOptions.success;
 	var data = $.extend({}, sourceOptions.data || {}, {
-		'start-min': formatDate(start, 'u'),
-		'start-max': formatDate(end, 'u'),
+		'start-min': start.format(), // ISO8601 (maybe more specific format str)
+		'start-max': end.format(),
 		'singleevents': true,
 		'max-results': 9999
 	});
 	
-	var ctz = sourceOptions.currentTimezone;
+	var ctz = sourceOptions.currentTimezone; // somehow use with Moment?
 	if (ctz) {
 		data.ctz = ctz = ctz.replace(' ', '_');
 	}
@@ -58,11 +55,15 @@ function transformOptions(sourceOptions, start, end) {
 			var events = [];
 			if (data.feed.entry) {
 				$.each(data.feed.entry, function(i, entry) {
+
+					// no more ignoreTimezone here!!! ahhh!!!!!
+
 					var startStr = entry['gd$when'][0]['startTime'];
-					var start = parseISO8601(startStr, true);
-					var end = parseISO8601(entry['gd$when'][0]['endTime'], true);
+					var start = moment(startStr);
+					var end = moment(entry['gd$when'][0]['endTime']);
 					var allDay = startStr.indexOf('T') == -1;
 					var url;
+
 					$.each(entry.link, function(i, link) {
 						if (link.type == 'text/html') {
 							url = link.href;
@@ -71,9 +72,11 @@ function transformOptions(sourceOptions, start, end) {
 							}
 						}
 					});
+
 					if (allDay) {
-						addDays(end, -1); // make inclusive
+						end.add('days', -1); // make inclusive
 					}
+
 					events.push({
 						id: entry['gCal$uid']['value'],
 						title: entry['title']['$t'],
@@ -84,6 +87,7 @@ function transformOptions(sourceOptions, start, end) {
 						location: entry['gd$where'][0]['valueString'],
 						description: entry['content']['$t']
 					});
+
 				});
 			}
 			var args = [events].concat(Array.prototype.slice.call(arguments, 1));

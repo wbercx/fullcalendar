@@ -22,9 +22,8 @@ function View(element, calendar, viewName) {
 	t.hideEvents = hideEvents;
 	t.eventDrop = eventDrop;
 	t.eventResize = eventResize;
-	// t.title
 	// t.start, t.end
-	// t.visStart, t.visEnd
+	// t.intervalStart, t.intervalEnd
 	
 	
 	// imports
@@ -117,9 +116,9 @@ function View(element, calendar, viewName) {
 	}
 	
 	
-	// returns a Date object for an event's end
+	// returns a Moment object for an event's end
 	function eventEnd(event) {
-		return event.end ? cloneDate(event.end) : defaultEventEnd(event);
+		return event.end ? event.end.clone() : defaultEventEnd(event);
 	}
 	
 	
@@ -252,9 +251,9 @@ function View(element, calendar, viewName) {
 			if (allDay !== undefined) {
 				e.allDay = allDay;
 			}
-			addMinutes(addDays(e.start, dayDelta, true), minuteDelta);
+			e.start.add('days', dayDelta).add('minutes', minuteDelta);
 			if (e.end) {
-				e.end = addMinutes(addDays(e.end, dayDelta, true), minuteDelta);
+				e.end.add('days', dayDelta).add('minutes', minuteDelta);
 			}
 			normalizeEvent(e, options);
 		}
@@ -265,7 +264,7 @@ function View(element, calendar, viewName) {
 		minuteDelta = minuteDelta || 0;
 		for (var e, len=events.length, i=0; i<len; i++) {
 			e = events[i];
-			e.end = addMinutes(addDays(eventEnd(e), dayDelta, true), minuteDelta);
+			e.end = eventEnd(e).add('days', dayDelta).add('minutes', minuteDelta);
 			normalizeEvent(e, options);
 		}
 	}
@@ -289,7 +288,7 @@ function View(element, calendar, viewName) {
 	//
 	// 2. Convert the "cell offset" to a "day offset" (the # of days since the first visible day in the view).
 	//
-	// 3. Convert the "day offset" into a "date" (a JavaScript Date object).
+	// 3. Convert the "day offset" into a "date" (a Moment).
 	//
 	// The reverse transformation happens when transforming a date into a cell.
 
@@ -345,10 +344,10 @@ function View(element, calendar, viewName) {
 
 
 	// Is the current day hidden?
-	// `day` is a day-of-week index (0-6), or a Date object
+	// `day` is a day-of-week index (0-6), or a Moment
 	function isHiddenDay(day) {
-		if (typeof day == 'object') {
-			day = day.getDay();
+		if (moment.isMoment(day)) {
+			day = day.day();
 		}
 		return isHiddenDayHash[day];
 	}
@@ -366,9 +365,9 @@ function View(element, calendar, viewName) {
 	function skipHiddenDays(date, inc, isExclusive) {
 		inc = inc || 1;
 		while (
-			isHiddenDayHash[ ( date.getDay() + (isExclusive ? inc : 0) + 7 ) % 7 ]
+			isHiddenDayHash[ ( date.day() + (isExclusive ? inc : 0) + 7 ) % 7 ]
 		) {
-			addDays(date, inc);
+			date.add('days', inc);
 		}
 	}
 
@@ -410,7 +409,7 @@ function View(element, calendar, viewName) {
 
 	// cell offset -> day offset
 	function cellOffsetToDayOffset(cellOffset) {
-		var day0 = t.visStart.getDay(); // first date's day of week
+		var day0 = t.start.day(); // first date's day of week
 		cellOffset += dayToCellMap[day0]; // normlize cellOffset to beginning-of-week
 		return Math.floor(cellOffset / cellsPerWeek) * 7 // # of days from full weeks
 			+ cellToDayMap[ // # of days from partial last week
@@ -419,11 +418,9 @@ function View(element, calendar, viewName) {
 			- day0; // adjustment for beginning-of-week normalization
 	}
 
-	// day offset -> date (JavaScript Date object)
+	// day offset -> date (a Moment)
 	function dayOffsetToDate(dayOffset) {
-		var date = cloneDate(t.visStart);
-		addDays(date, dayOffset);
-		return date;
+		return t.start.clone().add('days', dayOffset);
 	}
 
 
@@ -441,12 +438,12 @@ function View(element, calendar, viewName) {
 
 	// date -> day offset
 	function dateToDayOffset(date) {
-		return dayDiff(date, t.visStart);
+		return date.clone().startOf('day').diff(t.start, 'days');
 	}
 
 	// day offset -> cell offset
 	function dayOffsetToCellOffset(dayOffset) {
-		var day0 = t.visStart.getDay(); // first date's day of week
+		var day0 = t.start.day(); // first date's day of week
 		dayOffset += day0; // normalize dayOffset to beginning-of-week
 		return Math.floor(dayOffset / 7) * cellsPerWeek // # of cells from full weeks
 			+ dayToCellMap[ // # of cells from partial last week

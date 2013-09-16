@@ -18,7 +18,6 @@
         "src/Calendar.js",
         "src/Header.js",
         "src/EventManager.js",
-        "src/date_util.js",
         "src/util.js",
         "src/basic/MonthView.js",
         "src/basic/BasicWeekView.js",
@@ -36,7 +35,8 @@
         "src/common/CoordinateGrid.js",
         "src/common/HoverListener.js",
         "src/common/HorizontalPositionCache.js",
-        "src/outro.js"
+        "src/outro.js",
+        "moment_test/dateFormattingUtils.js"
       ],
       "styles": [
         "src/main.css",

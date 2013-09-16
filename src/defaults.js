@@ -11,8 +11,9 @@ var defaults = {
 	},
 	weekends: true,
 	weekNumbers: false,
-	weekNumberCalculation: 'iso',
-	weekNumberTitle: 'W',
+
+	weekNumberCalculation: 'iso', // needs updating with Moment
+	weekNumberTitle: 'W',         //
 	
 	// editing
 	//editable: false,
@@ -29,17 +30,17 @@ var defaults = {
 	
 	// time formats
 	titleFormat: {
-		month: 'MMMM yyyy',
-		week: "MMM d[ yyyy]{ '&#8212;'[ MMM] d yyyy}",
-		day: 'dddd, MMM d, yyyy'
+		month: 'MMMM YYYY', //'MMMM yyyy', // TODO: make i18n somehow!
+		week: 'll', //"MMM d[ yyyy]{ '&#8212;'[ MMM] d yyyy}",
+		day: 'LL' //'dddd, MMM d, yyyy' // TODO: add day-of-week somehow!
 	},
 	columnFormat: {
 		month: 'ddd',
-		week: 'ddd M/d',
-		day: 'dddd M/d'
+		week: 'ddd M/D',
+		day: 'dddd M/D'
 	},
 	timeFormat: { // for event elements
-		'': 'h(:mm)t' // default
+		'': 'h(:mm)aa' //'h(:mm)t' // default
 	},
 	
 	// locale

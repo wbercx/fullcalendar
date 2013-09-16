@@ -5,9 +5,9 @@ setDefaults({
 	firstHour: 6,
 	slotMinutes: 30,
 	defaultEventMinutes: 120,
-	axisFormat: 'h(:mm)tt',
+	axisFormat: 'h(:mm)a',
 	timeFormat: {
-		agenda: 'h:mm{ - h:mm}'
+		agenda: 'h:mm'
 	},
 	dragOpacity: {
 		agenda: .5
@@ -76,7 +76,6 @@ function AgendaView(element, calendar, viewName) {
 	var cellToDate = t.cellToDate;
 	var dateToCell = t.dateToCell;
 	var rangeToSegments = t.rangeToSegments;
-	var formatDate = calendar.formatDate;
 	
 	
 	// locals
@@ -240,12 +239,14 @@ function AgendaView(element, calendar, viewName) {
 		s =
 			"<table class='fc-agenda-slots' style='width:100%' cellspacing='0'>" +
 			"<tbody>";
-		d = zeroDate();
-		maxd = addMinutes(cloneDate(d), maxMinute);
-		addMinutes(d, minMinute);
+
+		d = t.start.clone();
+		maxd = d.clone().add('minutes', maxMinute);
+		d.add('minutes', minMinute);
+
 		slotCnt = 0;
 		for (i=0; d < maxd; i++) {
-			minutes = d.getMinutes();
+			minutes = d.minutes();
 			s +=
 				"<tr class='fc-slot" + i + ' ' + (!minutes ? '' : 'fc-minor') + "'>" +
 				"<th class='fc-agenda-axis " + headerClass + "'>" +
@@ -255,12 +256,14 @@ function AgendaView(element, calendar, viewName) {
 				"<div style='position:relative'>&nbsp;</div>" +
 				"</td>" +
 				"</tr>";
-			addMinutes(d, opt('slotMinutes'));
+			d.add('minutes', opt('slotMinutes'));
 			slotCnt++;
 		}
+
 		s +=
 			"</tbody>" +
 			"</table>";
+
 		slotTable = $(s).appendTo(slotContainer);
 		
 		slotBind(slotTable.find('td'));
@@ -340,7 +343,7 @@ function AgendaView(element, calendar, viewName) {
 		for (col=0; col<colCnt; col++) {
 			date = cellToDate(0, col);
 			html +=
-				"<th class='fc-" + dayIDs[date.getDay()] + " fc-col" + col + ' ' + headerClass + "'>" +
+				"<th class='fc-" + dayIDs[date.day()] + " fc-col" + col + ' ' + headerClass + "'>" +
 				htmlEscape(formatDate(date, colFormat)) +
 				"</th>";
 		}
@@ -358,7 +361,7 @@ function AgendaView(element, calendar, viewName) {
 		var headerClass = tm + "-widget-header"; // TODO: make these when updateOptions() called
 		var contentClass = tm + "-widget-content";
 		var date;
-		var today = clearTime(new Date());
+		var now = calendar.idealMoment();
 		var col;
 		var cellsHTML;
 		var cellHTML;
@@ -378,16 +381,16 @@ function AgendaView(element, calendar, viewName) {
 
 			classNames = [
 				'fc-col' + col,
-				'fc-' + dayIDs[date.getDay()],
+				'fc-' + dayIDs[date.day()],
 				contentClass
 			];
-			if (+date == +today) {
+			if (date.isSame(now, 'day')) {
 				classNames.push(
 					tm + '-state-highlight',
 					'fc-today'
 				);
 			}
-			else if (date < today) {
+			else if (date < now) {
 				classNames.push('fc-past');
 			}
 			else {
@@ -507,13 +510,14 @@ function AgendaView(element, calendar, viewName) {
 
 
 	function resetScroll() {
-		var d0 = zeroDate();
-		var scrollDate = cloneDate(d0);
-		scrollDate.setHours(opt('firstHour'));
+		var d0 = t.start.clone();
+		var scrollDate = d0.clone().hours(opt('firstHour'));
 		var top = timePosition(d0, scrollDate) + 1; // +1 for the border
+
 		function scroll() {
 			slotScroller.scrollTop(top);
 		}
+
 		scroll();
 		setTimeout(scroll, 0); // overrides any previous scroll state made by the browser
 	}
@@ -549,10 +553,12 @@ function AgendaView(element, calendar, viewName) {
 			if (rowMatch) {
 				var mins = parseInt(rowMatch[1]) * opt('slotMinutes');
 				var hours = Math.floor(mins/60);
-				date.setHours(hours);
-				date.setMinutes(mins%60 + minMinute);
+				date.hours(hours);
+				date.minutes(mins%60 + minMinute);
+				date = calendar.realMoment(date);
 				trigger('dayClick', dayBodyCells[col], date, false, ev);
 			}else{
+				date = calendar.realMoment(date);
 				trigger('dayClick', dayBodyCells[col], date, true, ev);
 			}
 		}
@@ -595,14 +601,18 @@ function AgendaView(element, calendar, viewName) {
 
 	function renderSlotOverlay(overlayStart, overlayEnd) {
 		for (var i=0; i<colCnt; i++) {
+
 			var dayStart = cellToDate(0, i);
-			var dayEnd = addDays(cloneDate(dayStart), 1);
-			var stretchStart = new Date(Math.max(dayStart, overlayStart));
-			var stretchEnd = new Date(Math.min(dayEnd, overlayEnd));
+			var dayEnd = dayStart.clone().add('days', 1);
+
+			var stretchStart = dayStart < overlayStart ? overlayStart : dayStart; // the max of the two
+			var stretchEnd = dayEnd < overlayEnd ? dayEnd : overlayEnd; // the min of the two
+
 			if (stretchStart < stretchEnd) {
 				var rect = coordinateGrid.rect(0, i, 0, i, slotContainer); // only use it for horizontal coords
 				var top = timePosition(dayStart, stretchStart);
 				var bottom = timePosition(dayStart, stretchEnd);
+				
 				rect.top = top;
 				rect.height = bottom - top;
 				slotBind(
@@ -693,23 +703,23 @@ function AgendaView(element, calendar, viewName) {
 			slotIndex--;
 		}
 		if (slotIndex >= 0) {
-			addMinutes(d, minMinute + slotIndex * snapMinutes);
+			d.add('minutes', minMinute + slotIndex * snapMinutes);
 		}
 		return d;
 	}
 	
 	
-	// get the Y coordinate of the given time on the given day (both Date objects)
-	function timePosition(day, time) { // both date objects. day holds 00:00 of current day
-		day = cloneDate(day, true);
-		if (time < addMinutes(cloneDate(day), minMinute)) {
+	// get the Y coordinate of the given time on the given day (both Moment objects)
+	function timePosition(day, time) { // both Moment objects. day holds 00:00 of current day
+		day = day.clone().startOf('day');
+		if (time < day.clone().add('minutes', minMinute)) {
 			return 0;
 		}
-		if (time >= addMinutes(cloneDate(day), maxMinute)) {
+		if (time >= day.clone().add('minutes', maxMinute)) {
 			return slotTable.height();
 		}
 		var slotMinutes = opt('slotMinutes'),
-			minutes = time.getHours()*60 + time.getMinutes() - minMinute,
+			minutes = time.hours()*60 + time.minutes() - minMinute,
 			slotI = Math.floor(minutes / slotMinutes),
 			slotTop = slotTopCache[slotI];
 		if (slotTop === undefined) {
@@ -731,34 +741,34 @@ function AgendaView(element, calendar, viewName) {
 	
 	
 	function defaultEventEnd(event) {
-		var start = cloneDate(event.start);
+		var start = event.start.clone();
 		if (event.allDay) {
 			return start;
 		}
-		return addMinutes(start, opt('defaultEventMinutes'));
+		return start.add('minutes', opt('defaultEventMinutes'));
 	}
 	
 	
 	
 	/* Selection
 	---------------------------------------------------------------------------------*/
+
 	
-	
-	function defaultSelectionEnd(startDate, allDay) {
+	function defaultSelectionEnd(start, allDay) {
 		if (allDay) {
-			return cloneDate(startDate);
+			return start.clone();
 		}
-		return addMinutes(cloneDate(startDate), opt('slotMinutes'));
+		return start.clone().add('minutes', opt('slotMinutes'));
 	}
 	
 	
-	function renderSelection(startDate, endDate, allDay) { // only for all-day
+	function renderSelection(start, end, allDay) { // only for all-day
 		if (allDay) {
 			if (opt('allDaySlot')) {
-				renderDayOverlay(startDate, addDays(cloneDate(endDate), 1), true);
+				renderDayOverlay(start, end.clone().add('days', 1), true);
 			}
 		}else{
-			renderSlotSelection(startDate, endDate);
+			renderSlotSelection(start, end);
 		}
 	}
 	
@@ -834,9 +844,9 @@ function AgendaView(element, calendar, viewName) {
 					var d2 = realCellToDate(cell);
 					dates = [
 						d1,
-						addMinutes(cloneDate(d1), snapMinutes), // calculate minutes depending on selection slot minutes 
+						d1.clone().add('minutes', snapMinutes), // calculate minutes depending on selection slot minutes
 						d2,
-						addMinutes(cloneDate(d2), snapMinutes)
+						d2.clone().add('minutes', snapMinutes)
 					].sort(dateCompare);
 					renderSlotSelection(dates[0], dates[3]);
 				}else{
@@ -846,7 +856,7 @@ function AgendaView(element, calendar, viewName) {
 			$(document).one('mouseup', function(ev) {
 				hoverListener.stop();
 				if (dates) {
-					if (+dates[0] == +dates[1]) {
+					if (+dates[0] == +dates[1]) { // TODO: use moment?
 						reportDayClick(dates[0], false, ev);
 					}
 					reportSelection(dates[0], dates[3], false, ev);
@@ -874,7 +884,7 @@ function AgendaView(element, calendar, viewName) {
 					renderCellOverlay(cell.row, cell.col, cell.row, cell.col);
 				}else{
 					var d1 = realCellToDate(cell);
-					var d2 = addMinutes(cloneDate(d1), opt('defaultEventMinutes'));
+					var d2 = d1.clone().add('minutes', opt('defaultEventMinutes'));
 					renderSlotOverlay(d1, d2);
 				}
 			}
@@ -886,7 +896,14 @@ function AgendaView(element, calendar, viewName) {
 		var cell = hoverListener.stop();
 		clearOverlays();
 		if (cell) {
-			trigger('drop', _dragElement, realCellToDate(cell), getIsCellAllDay(cell), ev, ui);
+			trigger(
+				'drop',
+				_dragElement,
+				calendar.realMoment(realCellToDate(cell)), // for real!!!!!!
+				getIsCellAllDay(cell),
+				ev,
+				ui
+			);
 		}
 	}
 	

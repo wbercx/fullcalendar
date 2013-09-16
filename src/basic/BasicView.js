@@ -46,7 +46,6 @@ function BasicView(element, calendar, viewName) {
 	var cellToDate = t.cellToDate;
 	var dateToCell = t.dateToCell;
 	var rangeToSegments = t.rangeToSegments;
-	var formatDate = calendar.formatDate;
 	
 	
 	// locals
@@ -195,7 +194,7 @@ function BasicView(element, calendar, viewName) {
 		for (col=0; col<colCnt; col++) {
 			date = cellToDate(0, col);
 			html +=
-				"<th class='fc-day-header fc-" + dayIDs[date.getDay()] + " " + headerClass + "'>" +
+				"<th class='fc-day-header fc-" + dayIDs[date.day()] + " " + headerClass + "'>" +
 				htmlEscape(formatDate(date, colFormat)) +
 				"</th>";
 		}
@@ -244,26 +243,26 @@ function BasicView(element, calendar, viewName) {
 
 
 	function buildCellHTML(date) {
-		var contentClass = tm + "-widget-content";
-		var month = t.start.getMonth();
-		var today = clearTime(new Date());
+		var month = t.intervalStart.month();
+		var now = calendar.idealMoment();
 		var html = '';
+		var contentClass = tm + "-widget-content";
 		var classNames = [
 			'fc-day',
-			'fc-' + dayIDs[date.getDay()],
+			'fc-' + dayIDs[date.day()],
 			contentClass
 		];
 
-		if (date.getMonth() != month) {
+		if (date.month() != month) {
 			classNames.push('fc-other-month');
 		}
-		if (+date == +today) {
+		if (date.isSame(now, 'day')) {
 			classNames.push(
 				'fc-today',
 				tm + '-state-highlight'
 			);
 		}
-		else if (date < today) {
+		else if (date < now) {
 			classNames.push('fc-past');
 		}
 		else {
@@ -273,12 +272,12 @@ function BasicView(element, calendar, viewName) {
 		html +=
 			"<td" +
 			" class='" + classNames.join(' ') + "'" +
-			" data-date='" + formatDate(date, 'yyyy-MM-dd') + "'" +
+			" data-date='" + date.format('YYYY-MM-DD') + "'" +
 			">" +
 			"<div>";
 
 		if (showNumbers) {
-			html += "<div class='fc-day-number'>" + date.getDate() + "</div>";
+			html += "<div class='fc-day-number'>" + date.date() + "</div>";
 		}
 
 		html +=
@@ -353,8 +352,10 @@ function BasicView(element, calendar, viewName) {
 	
 	function dayClick(ev) {
 		if (!opt('selectable')) { // if selectable, SelectionManager will worry about dayClick
-			var date = parseISO8601($(this).data('date'));
-			trigger('dayClick', this, date, true, ev);
+			var realDate = calendar.realMoment( // TODO: best use of realMoment???
+				$(this).data('date')
+			);
+			trigger('dayClick', this, realDate, true, ev);
 		}
 	}
 	
@@ -398,13 +399,17 @@ function BasicView(element, calendar, viewName) {
 	-----------------------------------------------------------------------*/
 	
 	
-	function defaultSelectionEnd(startDate, allDay) {
-		return cloneDate(startDate);
+	function defaultSelectionEnd(start, allDay) {
+		return start.clone();
 	}
 	
 	
-	function renderSelection(startDate, endDate, allDay) {
-		renderDayOverlay(startDate, addDays(cloneDate(endDate), 1), true); // rebuild every time???
+	function renderSelection(start, end, allDay) {
+		renderDayOverlay(
+			start,
+			end.clone().add('days', 1),
+			true // rebuild every time???
+		);
 	}
 	
 	
@@ -416,7 +421,13 @@ function BasicView(element, calendar, viewName) {
 	function reportDayClick(date, allDay, ev) {
 		var cell = dateToCell(date);
 		var _element = bodyCells[cell.row*colCnt + cell.col];
-		trigger('dayClick', _element, date, allDay, ev);
+		trigger(
+			'dayClick',
+			_element,
+			calendar.realMoment(date),
+			allDay,
+			ev
+		);
 	}
 	
 	
@@ -440,7 +451,14 @@ function BasicView(element, calendar, viewName) {
 		clearOverlays();
 		if (cell) {
 			var d = cellToDate(cell);
-			trigger('drop', _dragElement, d, true, ev, ui);
+			trigger(
+				'drop',
+				_dragElement,
+				calendar.realMoment(d),
+				true,
+				ev,
+				ui
+			);
 		}
 	}
 	
@@ -451,7 +469,7 @@ function BasicView(element, calendar, viewName) {
 	
 	
 	function defaultEventEnd(event) {
-		return cloneDate(event.start);
+		return event.start.clone();
 	}
 	
 	

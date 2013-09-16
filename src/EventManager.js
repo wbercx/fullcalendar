@@ -10,7 +10,7 @@ var ajaxDefaults = {
 var eventGUID = 1;
 
 
-function EventManager(options, _sources) {
+function EventManager(options, _sources) { // assumed to be a calendar
 	var t = this;
 	
 	
@@ -102,9 +102,14 @@ function EventManager(options, _sources) {
 	function _fetchEventSource(source, callback) {
 		var i;
 		var fetchers = fc.sourceFetchers;
+		var realRangeStart = t.realMoment(rangeStart);
+		var realRangeEnd = t.realMoment(rangeEnd);
 		var res;
+
 		for (i=0; i<fetchers.length; i++) {
-			res = fetchers[i](source, rangeStart, rangeEnd, callback);
+			res = fetchers[i](source, realRangeStart.clone(), realRangeEnd.clone(), callback);
+			// ^ clone moments in case they are modified. we need them for later
+
 			if (res === true) {
 				// the fetcher is in charge. made its own async request
 				return;
@@ -115,11 +120,12 @@ function EventManager(options, _sources) {
 				return;
 			}
 		}
+
 		var events = source.events;
 		if (events) {
 			if ($.isFunction(events)) {
 				pushLoading();
-				events(cloneDate(rangeStart), cloneDate(rangeEnd), function(events) {
+				events(realRangeStart, realRangeEnd, function(events) {
 					callback(events);
 					popLoading();
 				});
@@ -154,11 +160,12 @@ function EventManager(options, _sources) {
 
 				var startParam = firstDefined(source.startParam, options.startParam);
 				var endParam = firstDefined(source.endParam, options.endParam);
+
 				if (startParam) {
-					data[startParam] = Math.round(+rangeStart / 1000);
+					data[startParam] = Math.round(+realRangeStart / 1000);
 				}
 				if (endParam) {
-					data[endParam] = Math.round(+rangeEnd / 1000);
+					data[endParam] = Math.round(+realRangeEnd / 1000);
 				}
 
 				pushLoading();
@@ -241,19 +248,25 @@ function EventManager(options, _sources) {
 			endDelta = event.end ?
 				(event.end - (event._end || defaultEventEnd(event))) // event._end would be null if event.end
 				: 0;                                                      // was null and event was just resized
+
 		for (i=0; i<len; i++) {
 			e = cache[i];
 			if (e._id == event._id && e != event) {
-				e.start = new Date(+e.start + startDelta);
+
+				e.start.add('ms', startDelta);
+
 				if (event.end) {
 					if (e.end) {
-						e.end = new Date(+e.end + endDelta);
-					}else{
-						e.end = new Date(+defaultEventEnd(e) + endDelta);
+						e.end.add('ms', endDelta);
 					}
-				}else{
-					e.end = null;
+					else {
+						e.end = defaultEventEnd(e).add('ms', endDelta);
+					}
 				}
+				else {
+					delete e.end;
+				}
+
 				e.title = event.title;
 				e.url = event.url;
 				e.allDay = event.allDay;
@@ -263,9 +276,11 @@ function EventManager(options, _sources) {
 				e.backgroundColor = event.backgroundColor;
 				e.borderColor = event.borderColor;
 				e.textColor = event.textColor;
+
 				normalizeEvent(e);
 			}
 		}
+		
 		normalizeEvent(event);
 		reportEvents(cache);
 	}
@@ -353,30 +368,43 @@ function EventManager(options, _sources) {
 	function normalizeEvent(event) {
 		var source = event.source || {};
 		var ignoreTimezone = firstDefined(source.ignoreTimezone, options.ignoreTimezone);
+
 		event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
+
 		if (event.date) {
 			if (!event.start) {
 				event.start = event.date;
 			}
 			delete event.date;
 		}
-		event._start = cloneDate(event.start = parseDate(event.start, ignoreTimezone));
-		event.end = parseDate(event.end, ignoreTimezone);
-		if (event.end && event.end <= event.start) {
-			event.end = null;
+
+		event.start = t.moment(event.start);
+		event._start = event.start.clone();
+
+		if (event.end) {
+			event.end = t.moment(event.end);
+			if (!event.end.isValid() || event.end <= event.start) {
+				delete event.end;
+			}
 		}
-		event._end = event.end ? cloneDate(event.end) : null;
+		if (event.end) {
+			event._end = event.end.clone(); // TODO: check elsewhere in code that having undefined _end is okay
+		}
+
 		if (event.allDay === undefined) {
 			event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
 		}
+
 		if (event.className) {
 			if (typeof event.className == 'string') {
-				event.className = event.className.split(/\s+/);
+				event.className = event.className.split(/\s+/); // TODO: call this classNames? (with an s)
 			}
-		}else{
+		}
+		else {
 			event.className = [];
 		}
-		// TODO: if there is no start date, return false to indicate an invalid event
+
+		// TODO: if there is no start date (or it is invalid), return false to indicate an invalid event
 	}
 	
 	

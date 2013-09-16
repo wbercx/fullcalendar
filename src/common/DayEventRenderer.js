@@ -31,7 +31,6 @@ function DayEventRenderer() {
 	var colContentRight = t.colContentRight;
 	var dateToCell = t.dateToCell;
 	var getDaySegmentContainer = t.getDaySegmentContainer;
-	var formatDates = t.calendar.formatDates;
 	var renderDayOverlay = t.renderDayOverlay;
 	var clearOverlays = t.clearOverlays;
 	var clearSelection = t.clearSelection;
@@ -42,6 +41,7 @@ function DayEventRenderer() {
 	var cellOffsetToDayOffset = t.cellOffsetToDayOffset;
 	var dateToDayOffset = t.dateToDayOffset;
 	var dayOffsetToCellOffset = t.dayOffsetToCellOffset;
+	var calendar = t.calendar;
 
 
 	// Render `events` onto the calendar, attach mouse event handlers, and call the `eventAfterRender` callback for each.
@@ -181,9 +181,9 @@ function DayEventRenderer() {
 	// A "segment" is the same data structure that View.rangeToSegments produces,
 	// with the addition of the `event` property being set to reference the original event.
 	function buildSegmentsForEvent(event) {
-		var startDate = event.start;
-		var endDate = exclEndDay(event);
-		var segments = rangeToSegments(startDate, endDate);
+		var start = calendar.idealMoment(event.start);
+		var end = calendar.idealMoment(exclEndDay(event));
+		var segments = rangeToSegments(start, end);
 		for (var i=0; i<segments.length; i++) {
 			segments[i].event = event;
 		}
@@ -276,7 +276,7 @@ function DayEventRenderer() {
 			html +=
 				"<span class='fc-event-time'>" +
 				htmlEscape(
-					formatDates(event.start, event.end, opt('timeFormat'))
+					formatDate(event.start, opt('timeFormat'))
 				) +
 				"</span>";
 		}
@@ -565,7 +565,7 @@ function DayEventRenderer() {
 		eventElementHandlers(event, eventElement);
 	}
 
-	
+
 	function draggableDayEvent(event, eventElement) {
 		var hoverListener = getHoverListener();
 		var dayDelta;
@@ -582,10 +582,10 @@ function DayEventRenderer() {
 					if (cell) {
 						var origDate = cellToDate(origCell);
 						var date = cellToDate(cell);
-						dayDelta = dayDiff(date, origDate);
+						dayDelta = date.diff(origDate, 'days');
 						renderDayOverlay(
-							addDays(cloneDate(event.start), dayDelta),
-							addDays(exclEndDay(event), dayDelta)
+							event.start.clone().add('days', dayDelta),
+							exclEndDay(event).add('days', dayDelta)
 						);
 					}else{
 						dayDelta = 0;
@@ -659,7 +659,7 @@ function DayEventRenderer() {
 						cellOffsetToDayOffset(origCellOffset);
 
 					if (dayDelta) {
-						eventCopy.end = addDays(eventEnd(event), dayDelta, true);
+						eventCopy.end = eventEnd(event).add('days', dayDelta);
 						var oldHelpers = helpers;
 
 						helpers = renderTempDayEvent(eventCopy, segment.row, elementTop);
@@ -682,7 +682,7 @@ function DayEventRenderer() {
 					clearOverlays();
 					renderDayOverlay( // coordinate grid already rebuilt with hoverListener.start()
 						event.start,
-						addDays( exclEndDay(event), dayDelta )
+						exclEndDay(event).add('days', dayDelta)
 						// TODO: instead of calling renderDayOverlay() with dates,
 						// call _renderDayOverlay (or whatever) with cell offsets.
 					);

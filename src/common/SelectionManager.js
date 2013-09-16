@@ -13,6 +13,7 @@ function SelectionManager() {
 	
 	
 	// imports
+	var calendar = t.calendar;
 	var opt = t.opt;
 	var trigger = t.trigger;
 	var defaultSelectionEnd = t.defaultSelectionEnd;
@@ -39,13 +40,13 @@ function SelectionManager() {
 	}
 	
 
-	function select(startDate, endDate, allDay) {
+	function select(start, end, allDay) {
 		unselect();
-		if (!endDate) {
-			endDate = defaultSelectionEnd(startDate, allDay);
+		if (!end) {
+			end = defaultSelectionEnd(start, allDay);
 		}
-		renderSelection(startDate, endDate, allDay);
-		reportSelection(startDate, endDate, allDay);
+		renderSelection(start, end, allDay);
+		reportSelection(start, end, allDay);
 	}
 	
 	
@@ -58,9 +59,16 @@ function SelectionManager() {
 	}
 	
 	
-	function reportSelection(startDate, endDate, allDay, ev) {
+	function reportSelection(start, end, allDay, ev) {
 		selected = true;
-		trigger('select', null, startDate, endDate, allDay, ev);
+		trigger(
+			'select',
+			null,
+			calendar.realMoment(start),
+			calendar.realMoment(end),
+			allDay,
+			ev
+		);
 	}
 	
 	
@@ -69,6 +77,7 @@ function SelectionManager() {
 		var getIsCellAllDay = t.getIsCellAllDay;
 		var hoverListener = t.getHoverListener();
 		var reportDayClick = t.reportDayClick; // this is hacky and sort of weird
+
 		if (ev.which == 1 && opt('selectable')) { // which==1 means left mouse button
 			unselect(ev);
 			var _mousedownElement = this;

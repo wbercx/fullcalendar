@@ -9,16 +9,24 @@ fc.applyAll = applyAll;
 function exclEndDay(event) {
 	if (event.end) {
 		return _exclEndDay(event.end, event.allDay);
-	}else{
-		return addDays(cloneDate(event.start), 1);
+	}
+	else {
+		return event.start.clone().add('days', 1);
 	}
 }
 
 
 function _exclEndDay(end, allDay) {
-	end = cloneDate(end);
-	return allDay || end.getHours() || end.getMinutes() ? addDays(end, 1) : clearTime(end);
-	// why don't we check for seconds/ms too?
+	end = end.clone();
+
+	if (allDay || end.hours() || end.minutes()) { // why don't we check for seconds/ms too?
+		end.add('days', 1);
+	}
+	else {
+		end.startOf('day');
+	}
+
+	return end;
 }
 
 
@@ -125,7 +133,7 @@ function vborders(element) {
 function noop() { }
 
 
-function dateCompare(a, b) {
+function dateCompare(a, b) { // works with moments too
 	return a - b;
 }
 
@@ -184,7 +192,7 @@ function enableTextSelection(element) {
 */
 
 
-function markFirstLast(e) {
+function markFirstLast(e) { // TODO: use CSS selectors instead
 	e.children()
 		.removeClass('fc-first fc-last')
 		.filter(':first-child')
@@ -192,14 +200,6 @@ function markFirstLast(e) {
 		.end()
 		.filter(':last-child')
 			.addClass('fc-last');
-}
-
-
-function setDayID(cell, date) {
-	cell.each(function(i, _cell) {
-		_cell.className = _cell.className.replace(/^fc-\w*/, 'fc-' + dayIDs[date.getDay()]);
-		// TODO: make a way that doesn't rely on order of classes
-	});
 }
 
 

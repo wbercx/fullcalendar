@@ -1,4 +1,34 @@
 
+var dayIDs = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+function parseTime(s) { // returns minutes since start of day
+	if (typeof s == 'number') { // an hour
+		return s * 60;
+	}
+	if (typeof s == 'object') { // a Date object
+		return s.getHours() * 60 + s.getMinutes();
+	}
+	var m = s.match(/(\d+)(?::(\d+))?\s*(\w+)?/);
+	if (m) {
+		var h = parseInt(m[1], 10);
+		if (m[3]) {
+			h %= 12;
+			if (m[3].toLowerCase().charAt(0) == 'p') {
+				h += 12;
+			}
+		}
+		return h * 60 + (m[2] ? parseInt(m[2], 10) : 0);
+	}
+}
+
+moment.fn.weekday = function (input) { // bugfix
+	var weekday = (this.day() + 7 - this.lang()._week.dow) % 7;
+	return input == null ? weekday : this.add("d", input - weekday);
+};
+
+
+
+
 // Single Date Formatting
 // -------------------------------------------------------------------------------------------------
 
@@ -23,12 +53,11 @@ function formatDateWithChunks(date, chunks) {
 
 
 // addition formatting tokens we want recognized
-// TODO: change at "aa" and "AA"
 var tokenOverrides = {
-	t: function(date) { // "a" or "p"
+	aa: function(date) { // "a" or "p"
 		return date.format('a').charAt(0);
 	},
-	T: function(date) { // "A" or "P"
+	AA: function(date) { // "A" or "P"
 		return date.format('A').charAt(0);
 	}
 };
@@ -160,6 +189,7 @@ function formatSimilarChunk(date1, date2, chunk) {
 		if (
 			unit &&
 			!date1.clone().startOf(unit).diff( date2.clone().startOf(unit) )
+			// !!!TODO: use isSame ???????
 		) {
 			return date1.format(token); // use Moment. would be the same if we used `date2`
 			// BWT, don't support custom tokens

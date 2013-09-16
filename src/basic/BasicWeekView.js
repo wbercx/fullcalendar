@@ -11,42 +11,21 @@ function BasicWeekView(element, calendar) {
 	
 	// imports
 	BasicView.call(t, element, calendar, 'basicWeek');
-	var opt = t.opt;
-	var renderBasic = t.renderBasic;
-	var skipHiddenDays = t.skipHiddenDays;
-	var getCellsPerWeek = t.getCellsPerWeek;
-	var formatDates = calendar.formatDates;
-	
-	
+
+
 	function render(date, delta) {
 
 		if (delta) {
-			addDays(date, delta * 7);
+			date.add('weeks', delta).startOf('week');
 		}
 
-		var start = addDays(cloneDate(date), -((date.getDay() - opt('firstDay') + 7) % 7));
-		var end = addDays(cloneDate(start), 7);
+		t.start = t.intervalStart = date.clone().startOf('week');
+		t.end = t.intervalEnd = t.start.clone().add('weeks', 1);
 
-		var visStart = cloneDate(start);
-		skipHiddenDays(visStart);
+		t.skipHiddenDays(t.start);
+		t.skipHiddenDays(t.end, -1, true);
 
-		var visEnd = cloneDate(end);
-		skipHiddenDays(visEnd, -1, true);
-
-		var colCnt = getCellsPerWeek();
-
-		t.start = start;
-		t.end = end;
-		t.visStart = visStart;
-		t.visEnd = visEnd;
-
-		t.title = formatDates(
-			visStart,
-			addDays(cloneDate(visEnd), -1),
-			opt('titleFormat')
-		);
-
-		renderBasic(1, colCnt, false);
+		t.renderBasic(1, t.getCellsPerWeek(), false);
 	}
 	
 	

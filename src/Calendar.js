@@ -22,12 +22,101 @@ function Calendar(element, options, eventSources) {
 	t.today = today;
 	t.gotoDate = gotoDate;
 	t.incrementDate = incrementDate;
-	t.formatDate = function(format, date) { return formatDate(format, date, options) };
-	t.formatDates = function(format, date1, date2) { return formatDates(format, date1, date2, options) };
 	t.getDate = getDate;
 	t.getView = getView;
 	t.option = option;
 	t.trigger = trigger;
+
+
+
+
+	// TODO: fix startOf('week') utc-mode bug
+	// TODO: moment.utc() with ambiguous datetime info
+	// TODO: rename these to "date" ?
+
+	t.moment = function() {
+		var mom;
+
+		if (options.utc) {
+			mom = moment.utc.apply(moment, arguments);
+		}
+		else {
+			mom = moment.apply(undefined, arguments);
+		}
+
+		applyLang(mom);
+
+		return mom;
+	};
+
+
+	t.utcMoment = function() {
+		var mom = moment.utc.apply(moment, arguments);
+
+		applyLang(mom);
+
+		return mom;
+	};
+
+
+	t.idealMoment = function() {
+		var mom = t.moment.apply(t, arguments);
+		// are we sure this should accept anything???
+
+		if (mom.isValid()) {
+			return t.utcMoment(getMomentValues(mom));
+		}
+	};
+
+
+	t.realMoment = function(mom) {
+
+		if (!moment.isMoment(mom)) {
+			mom = moment.utc.apply(moment, arguments);
+			// should we have this? should we accept date strings with timezone indicators?
+			// related to dayClick date-date="asdfasdf"
+		}
+
+		if (mom.isValid()) {
+
+			var real = t.moment(getMomentValues(mom));
+			var midday = t.moment([ mom.year(), mom.month(), mom.date(), 9 ]);
+
+			while (real.date() != midday.date()) {
+				real.add('hours', real < midday ? 1 : -1);
+			}
+
+			return real;
+		}
+	};
+
+
+	function applyLang(mom) {
+		if (options.lang) {
+			mom.lang(options.lang);
+		}
+	}
+
+
+	function getMomentValues(mom) {
+		return [
+			mom.year(),
+			mom.month(),
+			mom.date(),
+			mom.hours(),
+			mom.minutes(),
+			mom.seconds(),
+			mom.milliseconds()
+		];
+	}
+
+
+	t.formatRange = function(m1, m2, formatStr) {
+		return formatRange(m1, m2, formatStr, ' - ', options.isRTL);
+	};
+
+
+
 	
 	
 	// imports
@@ -47,7 +136,7 @@ function Calendar(element, options, eventSources) {
 	var suggestedViewHeight;
 	var resizeUID = 0;
 	var ignoreWindowResize = 0;
-	var date = new Date();
+	var date;
 	var events = [];
 	var _dragElement;
 	
@@ -57,7 +146,7 @@ function Calendar(element, options, eventSources) {
 	-----------------------------------------------------------------------------*/
 	
 	
-	setYMD(date, options.year, options.month, options.date);
+	date = t.idealMoment(options.date); // if undefined, will be current date
 	
 	
 	function render(inc) {
@@ -185,7 +274,8 @@ function Calendar(element, options, eventSources) {
 	function renderView(inc) {
 		if (
 			!currentView.start || // never rendered before
-			inc || date < currentView.start || date >= currentView.end // or new date range
+			inc ||
+			date < currentView.start || date >= currentView.end // or new date range
 		) {
 			if (elementVisible()) {
 				_renderView(inc);
@@ -324,7 +414,7 @@ function Calendar(element, options, eventSources) {
 	
 
 	function getAndRenderEvents() {
-		if (!options.lazyFetching || isFetchNeeded(currentView.visStart, currentView.visEnd)) {
+		if (!options.lazyFetching || isFetchNeeded(currentView.start, currentView.end)) {
 			fetchAndRenderEvents();
 		}
 		else {
@@ -334,7 +424,7 @@ function Calendar(element, options, eventSources) {
 
 
 	function fetchAndRenderEvents() {
-		fetchEvents(currentView.visStart, currentView.visEnd);
+		fetchEvents(currentView.start, currentView.end);
 			// ... will call reportEvents
 			// ... which will call renderEvents
 	}
@@ -359,13 +449,20 @@ function Calendar(element, options, eventSources) {
 
 
 	function updateTitle() {
-		header.updateTitle(currentView.title);
+		header.updateTitle(
+			t.formatRange(
+				currentView.intervalStart,
+				currentView.intervalEnd.clone().add('ms', -1),
+				currentView.opt('titleFormat')
+			)
+		);
 	}
 
 
 	function updateTodayButton() {
-		var today = new Date();
-		if (today >= currentView.start && today < currentView.end) {
+		var now = t.idealMoment();
+
+		if (now >= currentView.intervalStart && now < currentView.intervalEnd) {
 			header.disableButton('today');
 		}
 		else {
@@ -380,7 +477,11 @@ function Calendar(element, options, eventSources) {
 	
 
 	function select(start, end, allDay) {
-		currentView.select(start, end, allDay===undefined ? true : allDay);
+		currentView.select(
+			t.idealMoment(start),
+			t.idealMoment(end),
+			allDay===undefined ? true : allDay
+		);
 	}
 	
 
@@ -407,49 +508,37 @@ function Calendar(element, options, eventSources) {
 	
 	
 	function prevYear() {
-		addYears(date, -1);
+		date.add('years', -1);
 		renderView();
 	}
 	
 	
 	function nextYear() {
-		addYears(date, 1);
+		date.add('years', 1);
 		renderView();
 	}
 	
 	
 	function today() {
-		date = new Date();
+		date = t.idealMoment();
 		renderView();
 	}
 	
 	
-	function gotoDate(year, month, dateOfMonth) {
-		if (year instanceof Date) {
-			date = cloneDate(year); // provided 1 argument, a Date
-		}else{
-			setYMD(date, year, month, dateOfMonth);
-		}
+	function gotoDate(dateInput) {
+		date = t.idealMoment(dateInput);
 		renderView();
 	}
 	
 	
-	function incrementDate(years, months, days) {
-		if (years !== undefined) {
-			addYears(date, years);
-		}
-		if (months !== undefined) {
-			addMonths(date, months);
-		}
-		if (days !== undefined) {
-			addDays(date, days);
-		}
+	function incrementDate() {
+		date.add.apply(date, arguments);
 		renderView();
 	}
 	
 	
 	function getDate() {
-		return cloneDate(date);
+		return t.realMoment(date);
 	}
 
 
@@ -510,6 +599,8 @@ function Calendar(element, options, eventSources) {
 	
 	/* External Dragging
 	------------------------------------------------------------------------*/
+
+	// TODO: dragging an external event, before dropping on the calendar, is really slow and laggy
 	
 	if (options.droppable) {
 		$(document)
