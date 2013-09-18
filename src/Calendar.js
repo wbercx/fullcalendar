@@ -1,8 +1,16 @@
 
  
-function Calendar(element, options, eventSources) {
+function Calendar(element, options) {
 	var t = this;
 	
+	options = options || {};
+	options = mergeOptions(
+		defaults,
+		options.isRTL ? rtlDefaults : {},
+		langOptions[options.lang] || {},
+		options
+	);
+
 	
 	// exports
 	t.options = options;
@@ -26,8 +34,6 @@ function Calendar(element, options, eventSources) {
 	t.getView = getView;
 	t.option = option;
 	t.trigger = trigger;
-
-
 
 
 	// TODO: fix startOf('week') utc-mode bug
@@ -118,7 +124,7 @@ function Calendar(element, options, eventSources) {
 	
 	
 	// imports
-	EventManager.call(t, options, eventSources);
+	EventManager.call(t, options);
 	var isFetchNeeded = t.isFetchNeeded;
 	var fetchEvents = t.fetchEvents;
 	

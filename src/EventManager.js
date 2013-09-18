@@ -10,7 +10,7 @@ var ajaxDefaults = {
 var eventGUID = 1;
 
 
-function EventManager(options, _sources) { // assumed to be a calendar
+function EventManager(options) { // assumed to be a calendar
 	var t = this;
 	
 	
@@ -40,7 +40,14 @@ function EventManager(options, _sources) { // assumed to be a calendar
 	var pendingSourceCnt = 0;
 	var loadingLevel = 0;
 	var cache = [];
-	
+
+
+
+	var _sources = options.eventSources || [];
+
+	if (options.events) {
+		_sources.push(options.events);
+	}
 	
 	for (var i=0; i<_sources.length; i++) {
 		_addEventSource(_sources[i]);

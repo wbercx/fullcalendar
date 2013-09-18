@@ -1,5 +1,8 @@
 
 
+var langOptions = {};
+
+
 fc.datepickerLang = function(langCode, options) {
 	console.log('datepickerLang', langCode, options);
 };
