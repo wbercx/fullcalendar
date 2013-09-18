@@ -61,15 +61,16 @@ fs.readdirSync(MOMENT_LANG_DIR).forEach(function(filename) {
 		fullCalendarLangJS = getFullCalendarLangJS(langCode) ||
 			(shortLangCode ? getFullCalendarLangJS(shortLangCode) : null);
 
-		// all 3 configs need to be present (except for en-ca, which doesn't have datepicker)
-		if (momentLangJS && (datepickerLangJS || shortLangCode == 'en') && fullCalendarLangJS) {
+		// If this is an "en" language, only the Moment config is needed.
+		// For all other languages, all 3 configs are needed.
+		if (momentLangJS && (shortLangCode == 'en' || (datepickerLangJS && fullCalendarLangJS))) {
 
 			finalJS = [
 				UMD_START,
 				'',
 				momentLangJS,
 				datepickerLangJS || '',
-				fullCalendarLangJS,
+				fullCalendarLangJS || '',
 				'',
 				UMD_END
 			].join('\n');

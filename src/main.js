@@ -50,7 +50,7 @@ function mergeOptions(target) {
 			if ($.isPlainObject(value) && $.isPlainObject(target[name])) {
 				mergeOptions(target[name], value);
 			}
-			else {
+			else if (value !== undefined) { // don't use values that are set, but undefined
 				target[name] = value;
 			}
 		});

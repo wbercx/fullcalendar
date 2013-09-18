@@ -1,15 +1,20 @@
 
  
-function Calendar(element, options) {
+function Calendar(element, instanceOptions) {
 	var t = this;
-	
-	options = options || {};
-	options = mergeOptions(
-		defaults,
-		options.isRTL ? rtlDefaults : {},
-		langOptions[options.lang] || {},
-		options
-	);
+
+
+	var options = mergeOptions({}, defaults, instanceOptions);
+	var langOptions = langOptionHash[options.lang];
+
+	if (langOptions) {
+		options = mergeOptions({}, defaults, langOptions, instanceOptions);
+	}
+
+	if (options.isRTL) {
+		options = mergeOptions({}, defaults, rtlDefaults, langOptions || {}, instanceOptions);
+	}
+
 
 	
 	// exports
