@@ -92,9 +92,7 @@ function Calendar(element, options, eventSources) {
 
 
 	function applyLang(mom) {
-		if (options.lang) {
-			mom.lang(options.lang);
-		}
+		mom.lang(options.lang);
 	}
 
 

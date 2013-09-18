@@ -15,6 +15,7 @@
         "src/intro.js",
         "src/defaults.js",
         "src/main.js",
+        "src/lang.js",
         "src/Calendar.js",
         "src/Header.js",
         "src/EventManager.js",

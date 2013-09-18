@@ -1,4 +1,6 @@
 
+// NOTE: this script needs to be executed from the current directory!!!
+
 var fs = require('fs');
 
 var FC_LANG_DIR = '../lang';

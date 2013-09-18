@@ -1,6 +1,8 @@
 
 var defaults = {
 
+	lang: 'en',
+
 	// display
 	defaultView: 'month',
 	aspectRatio: 1.35,

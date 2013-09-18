@@ -65,3 +65,16 @@ function setDefaults(d) {
 }
 
 
+function mergeOptions(target) {
+	for (var i=1; i<arguments.length; i++) {
+		$.each(arguments[i], function(name, value) {
+			if ($.isPlainObject(value) && $.isPlainObject(target[name])) {
+				mergeOptions(target[name], value);
+			}
+			else {
+				target[name] = value;
+			}
+		});
+	}
+	return target;
+}
