@@ -65,7 +65,7 @@ function SelectionManager() {
 			'select',
 			null,
 			calendar.realMoment(start),
-			calendar.realMoment(end),
+			calendar.realMoment(end), // this now triggers exclusive end time
 			allDay,
 			ev
 		);
@@ -86,6 +86,7 @@ function SelectionManager() {
 				clearSelection();
 				if (cell && getIsCellAllDay(cell)) {
 					dates = [ cellToDate(origCell), cellToDate(cell) ].sort(dateCompare);
+					dates[1].add('days', 1); // make exclusive
 					renderSelection(dates[0], dates[1], true);
 				}else{
 					dates = null;

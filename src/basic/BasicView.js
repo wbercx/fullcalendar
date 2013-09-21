@@ -399,16 +399,12 @@ function BasicView(element, calendar, viewName) {
 	
 	
 	function defaultSelectionEnd(start, allDay) {
-		return start.clone();
+		return start.clone().add('days', 1);
 	}
 	
 	
-	function renderSelection(start, end, allDay) {
-		renderDayOverlay(
-			start,
-			end.clone().add('days', 1),
-			true // rebuild every time???
-		);
+	function renderSelection(start, end, allDay) { // end is exclusive
+		renderDayOverlay(start, end, true); // true = rebuild every time
 	}
 	
 	

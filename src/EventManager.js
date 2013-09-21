@@ -397,7 +397,9 @@ function EventManager(options) { // assumed to be a calendar
 		var out = {};
 		var startInput = data.start || data.date;
 
-		out.source = source || {};
+		if (source) {
+			out.source = source;
+		}
 
 		out._id = data._id || (data.id === undefined ? '_fc' + eventGUID++ : data.id + '');
 
@@ -448,7 +450,7 @@ function EventManager(options) { // assumed to be a calendar
 		if (options.eventDataTransform) {
 			out = options.eventDataTransform(out);
 		}
-		if (source.eventDataTransform) {
+		if (source && source.eventDataTransform) {
 			out = source.eventDataTransform(out);
 		}
 

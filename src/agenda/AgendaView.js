@@ -750,7 +750,7 @@ function AgendaView(element, calendar, viewName) {
 	
 	function defaultSelectionEnd(start, allDay) {
 		if (allDay) {
-			return start.clone();
+			return start.clone().add('days', 1);
 		}
 		return start.clone().add(slotDuration);
 	}
@@ -759,7 +759,7 @@ function AgendaView(element, calendar, viewName) {
 	function renderSelection(start, end, allDay) { // only for all-day
 		if (allDay) {
 			if (opt('allDaySlot')) {
-				renderDayOverlay(start, end.clone().add('days', 1), true);
+				renderDayOverlay(start, end, true);
 			}
 		}else{
 			renderSlotSelection(start, end);
