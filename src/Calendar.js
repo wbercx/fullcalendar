@@ -108,8 +108,27 @@ function Calendar(element, instanceOptions) {
 	};
 
 
+	var langData = createObject(moment.langData(options.lang));
+
+	if (options.monthNames) {
+		langData._months = options.monthNames;
+	}
+	if (options.monthNamesShort) {
+		langData._monthsShort = options.monthNamesShort;
+	}
+	if (options.dayNames) {
+		langData._weekdays = options.dayNames;
+	}
+	if (options.dayNamesShort) {
+		langData._weekdaysShort = options.dayNamesShort;
+	}
+
+	console.log(langData);
+
+
+
 	function applyLang(mom) {
-		mom.lang(options.lang);
+		mom._lang = langData;
 	}
 
 

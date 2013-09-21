@@ -2,6 +2,15 @@
 fc.applyAll = applyAll;
 
 
+
+function createObject(proto) { // like Object.create
+	var f = function() {};
+	f.prototype = proto;
+	return new f();
+}
+
+
+
 /* Event Date Math
 -----------------------------------------------------------------------------*/
 
