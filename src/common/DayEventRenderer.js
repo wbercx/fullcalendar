@@ -246,7 +246,7 @@ function DayEventRenderer() {
 			classNames.push('fc-event-end');
 		}
 		// use the event's configured classNames
-		// guaranteed to be an array via `normalizeEvent`
+		// guaranteed to be an array via `buildEvent`
 		classNames = classNames.concat(event.className);
 		if (event.source) {
 			// use the event's source's classNames, if specified

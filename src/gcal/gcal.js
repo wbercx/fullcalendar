@@ -51,34 +51,22 @@ function transformOptions(sourceOptions, start, end, calendar) {
 			if (data.feed.entry) {
 				$.each(data.feed.entry, function(i, entry) {
 
-					//console.log(entry['title']['$t'], entry['gd$when'][0]['startTime'], entry['gd$when'][0]['endTime']);
-
-					var startStr = entry['gd$when'][0]['startTime'];
-					var start = calendar.moment(startStr);
-					var end = calendar.moment(entry['gd$when'][0]['endTime']);
-					var allDay = startStr.indexOf('T') == -1;
 					var url;
-
 					$.each(entry.link, function(i, link) {
 						if (link.type == 'text/html') {
 							url = link.href;
 							if (timezone && timezone != 'local') {
-								url += (url.indexOf('?') == -1 ? '?' : '&') + 'ctz=' + timezone;
+								url += (url.indexOf('?') == -1 ? '?' : '&') + 'ctz=' + encodeURIComponent(timezone);
 							}
 						}
 					});
 
-					if (allDay) {
-						end.add('days', -1); // make inclusive
-					}
-
 					events.push({
 						id: entry['gCal$uid']['value'],
 						title: entry['title']['$t'],
+						start: entry['gd$when'][0]['startTime'],
+						end: entry['gd$when'][0]['endTime'],
 						url: url,
-						start: start,
-						end: end,
-						allDay: allDay,
 						location: entry['gd$where'][0]['valueString'],
 						description: entry['content']['$t']
 					});

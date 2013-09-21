@@ -28,7 +28,6 @@ function View(element, calendar, viewName) {
 	
 	// imports
 	var defaultEventEnd = t.defaultEventEnd;
-	var normalizeEvent = calendar.normalizeEvent; // in EventManager
 	var reportEventChange = calendar.reportEventChange;
 	
 	
@@ -255,7 +254,6 @@ function View(element, calendar, viewName) {
 			if (e.end) {
 				e.end.add('days', dayDelta).add('minutes', minuteDelta);
 			}
-			normalizeEvent(e, options);
 		}
 	}
 	
@@ -265,7 +263,6 @@ function View(element, calendar, viewName) {
 		for (var e, len=events.length, i=0; i<len; i++) {
 			e = events[i];
 			e.end = eventEnd(e).add('days', dayDelta).add('minutes', minuteDelta);
-			normalizeEvent(e, options);
 		}
 	}
 

@@ -23,7 +23,6 @@ function EventManager(options) { // assumed to be a calendar
 	t.renderEvent = renderEvent;
 	t.removeEvents = removeEvents;
 	t.clientEvents = clientEvents;
-	t.normalizeEvent = normalizeEvent;
 	
 	
 	// imports
@@ -80,23 +79,16 @@ function EventManager(options) { // assumed to be a calendar
 	function fetchEventSource(source, fetchID) {
 		_fetchEventSource(source, function(events) {
 			if (fetchID == currentFetchID) {
-				if (events) {
 
-					if (options.eventDataTransform) {
-						events = $.map(events, options.eventDataTransform);
-					}
-					if (source.eventDataTransform) {
-						events = $.map(events, source.eventDataTransform);
-					}
-					// TODO: this technique is not ideal for static array event sources.
-					//  For arrays, we'll want to process all events right in the beginning, then never again.
-				
+				if (events) {
 					for (var i=0; i<events.length; i++) {
-						events[i].source = source;
-						normalizeEvent(events[i]);
+						var event = buildEvent(events[i], source);
+						if (event) {
+							cache.push(event);
+						}
 					}
-					cache = cache.concat(events);
 				}
+
 				pendingSourceCnt--;
 				if (!pendingSourceCnt) {
 					reportEvents(cache);
@@ -256,18 +248,37 @@ function EventManager(options) { // assumed to be a calendar
 	
 	/* Manipulation
 	-----------------------------------------------------------------------------*/
+
+
+	var miscCopyableProps = [
+		'title',
+		'url',
+		'allDay',
+		'className',
+		'editable',
+		'color',
+		'backgroundColor',
+		'borderColor',
+		'textColor'
+	];
 	
 	
 	function updateEvent(event) { // update an existing event
-		var i, len = cache.length, e,
-			defaultEventEnd = getView().defaultEventEnd, // getView???
-			startDelta = event.start - event._start,
-			endDelta = event.end ?
-				(event.end - (event._end || defaultEventEnd(event))) // event._end would be null if event.end
-				: 0;                                                      // was null and event was just resized
+		var i;
+		var e;
+		var defaultEventEnd = getView().defaultEventEnd; // getView???
+		var startDelta = event.start.diff(event._start);
+		var endDelta = 0;
+		var j;
+		var prop;
 
-		for (i=0; i<len; i++) {
+		if (event.end !== undefined) {
+			endDelta = event.end.diff(event._end || defaultEventEnd(event));
+		}
+
+		for (i=0; i<cache.length; i++) {
 			e = cache[i];
+
 			if (e._id == event._id && e != event) {
 
 				e.start.add('ms', startDelta);
@@ -284,35 +295,32 @@ function EventManager(options) { // assumed to be a calendar
 					delete e.end;
 				}
 
-				e.title = event.title;
-				e.url = event.url;
-				e.allDay = event.allDay;
-				e.className = event.className;
-				e.editable = event.editable;
-				e.color = event.color;
-				e.backgroundColor = event.backgroundColor;
-				e.borderColor = event.borderColor;
-				e.textColor = event.textColor;
+				for (j=0; j<miscCopyableProps.length; j++) {
+					prop = miscCopyableProps[j];
 
-				normalizeEvent(e);
+					if (event[prop] !== undefined) {
+						e[prop] = event[prop];
+					}
+				}
 			}
 		}
-		
-		normalizeEvent(event);
+
 		reportEvents(cache);
 	}
 	
 	
-	function renderEvent(event, stick) {
-		normalizeEvent(event);
-		if (!event.source) {
-			if (stick) {
-				stickySource.events.push(event);
-				event.source = stickySource;
+	function renderEvent(eventData, stick) {
+		var event = buildEvent(eventData);
+		if (event) {
+			if (!event.source) {
+				if (stick) {
+					stickySource.events.push(event);
+					event.source = stickySource;
+				}
+				cache.push(event);
 			}
-			cache.push(event);
+			reportEvents(cache);
 		}
-		reportEvents(cache);
 	}
 	
 	
@@ -380,47 +388,71 @@ function EventManager(options) { // assumed to be a calendar
 	
 	/* Event Normalization
 	-----------------------------------------------------------------------------*/
-	
-	
-	function normalizeEvent(event) {
-		var source = event.source || {};
 
-		event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
 
-		if (event.date) {
-			if (!event.start) {
-				event.start = event.date;
+	var simpleIsoRegex = /^\s*\d{4}-\d\d-\d\d$/;
+
+
+	function buildEvent(data, source) {
+		var out = {};
+		var startInput = data.start || data.date;
+
+		out.source = source || {};
+
+		out._id = data._id || (data.id === undefined ? '_fc' + eventGUID++ : data.id + '');
+
+		out.start = t.moment(startInput);
+		if (!out.start.isValid()) {
+			return;
+		}
+		out._start = out.start.clone();
+
+		if (data.end !== undefined) {
+			out.end = t.moment(data.end);
+			if (!out.end.isValid()) {
+				return;
 			}
-			delete event.date;
+			out._end = out.end.clone();
 		}
 
-		event.start = t.moment(event.start);
-		event._start = event.start.clone();
-
-		if (event.end) {
-			event.end = t.moment(event.end);
-			if (!event.end.isValid() || event.end <= event.start) {
-				delete event.end;
-			}
+		if (data.allDay !== undefined) {
+			out.allDay = data.allDay;
 		}
-		if (event.end) {
-			event._end = event.end.clone(); // TODO: check elsewhere in code that having undefined _end is okay
-		}
-
-		if (event.allDay === undefined) {
-			event.allDay = firstDefined(source.allDayDefault, options.allDayDefault);
+		else {
+			out.allDay =
+				typeof startInput === 'string' &&
+				simpleIsoRegex.test(startInput) &&
+				(
+					data.end === undefined ||
+					typeof data.end === 'string' &&
+					simpleIsoRegex.test(data.end)
+				);
 		}
 
-		if (event.className) {
-			if (typeof event.className == 'string') {
-				event.className = event.className.split(/\s+/); // TODO: call this classNames? (with an s)
+		// TODO: change to plain string
+		if (data.className) {
+			if (typeof data.className == 'string') {
+				out.className = data.className.split(/\s+/);
 			}
 		}
 		else {
-			event.className = [];
+			out.className = [];
 		}
 
-		// TODO: if there is no start date (or it is invalid), return false to indicate an invalid event
+		$.each(data, function(key, value) {
+			if (!/start|date|end|allDay|className/.test(key)) {
+				out[key] = value;
+			}
+		});
+
+		if (options.eventDataTransform) {
+			out = options.eventDataTransform(out);
+		}
+		if (source.eventDataTransform) {
+			out = source.eventDataTransform(out);
+		}
+
+		return out;
 	}
 	
 	

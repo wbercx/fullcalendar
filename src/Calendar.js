@@ -123,9 +123,6 @@ function Calendar(element, instanceOptions) {
 		langData._weekdaysShort = options.dayNamesShort;
 	}
 
-	console.log(langData);
-
-
 
 	function applyLang(mom) {
 		mom._lang = langData;
