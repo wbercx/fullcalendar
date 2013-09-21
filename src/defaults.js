@@ -3,6 +3,9 @@ var defaults = {
 
 	lang: 'en',
 
+	defaultEventDuration: '02:00:00',
+	defaultAllDayEventDuration: '24:00:00',
+
 	// display
 	defaultView: 'month',
 	aspectRatio: 1.35,

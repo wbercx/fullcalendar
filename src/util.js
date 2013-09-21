@@ -11,34 +11,6 @@ function createObject(proto) { // like Object.create
 
 
 
-/* Event Date Math
------------------------------------------------------------------------------*/
-
-
-function exclEndDay(event) {
-	if (event.end) {
-		return _exclEndDay(event.end, event.allDay);
-	}
-	else {
-		return event.start.clone().add('days', 1);
-	}
-}
-
-
-function _exclEndDay(end, allDay) {
-	end = end.clone();
-
-	if (allDay || end.hours() || end.minutes()) { // why don't we check for seconds/ms too?
-		end.add('days', 1);
-	}
-	else {
-		end.startOf('day');
-	}
-
-	return end;
-}
-
-
 
 /* Event Element Binding
 -----------------------------------------------------------------------------*/

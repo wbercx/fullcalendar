@@ -135,6 +135,24 @@ function Calendar(element, instanceOptions) {
 
 
 
+
+	t.getEventEnd = function(event) {
+
+		if (event.end) {
+			return event.end.clone();
+		}
+
+		return event.start.clone().add(
+			moment.duration(
+				options[
+					event.allDay ? 'defaultAllDayEventDuration' : 'defaultEventDuration'
+				]
+			)
+		);
+	};
+
+
+
 	
 	
 	// imports

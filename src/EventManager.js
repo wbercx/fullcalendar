@@ -29,6 +29,7 @@ function EventManager(options) { // assumed to be a calendar
 	var trigger = t.trigger;
 	var getView = t.getView;
 	var reportEvents = t.reportEvents;
+	var getEventEnd = t.getEventEnd;
 	
 	
 	// locals
@@ -266,14 +267,13 @@ function EventManager(options) { // assumed to be a calendar
 	function updateEvent(event) { // update an existing event
 		var i;
 		var e;
-		var defaultEventEnd = getView().defaultEventEnd; // getView???
 		var startDelta = event.start.diff(event._start);
 		var endDelta = 0;
 		var j;
 		var prop;
 
 		if (event.end !== undefined) {
-			endDelta = event.end.diff(event._end || defaultEventEnd(event));
+			endDelta = event.end.diff(event._end || getEventEnd(event));
 		}
 
 		for (i=0; i<cache.length; i++) {
@@ -288,7 +288,7 @@ function EventManager(options) { // assumed to be a calendar
 						e.end.add('ms', endDelta);
 					}
 					else {
-						e.end = defaultEventEnd(e).add('ms', endDelta);
+						e.end = getEventEnd(e).add('ms', endDelta);
 					}
 				}
 				else {

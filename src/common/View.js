@@ -14,7 +14,6 @@ function View(element, calendar, viewName) {
 	t.isEventResizable = isEventResizable;
 	t.setEventData = setEventData;
 	t.clearEventData = clearEventData;
-	t.eventEnd = eventEnd;
 	t.reportEventElement = reportEventElement;
 	t.triggerEventDestroy = triggerEventDestroy;
 	t.eventElementHandlers = eventElementHandlers;
@@ -27,8 +26,8 @@ function View(element, calendar, viewName) {
 	
 	
 	// imports
-	var defaultEventEnd = t.defaultEventEnd;
 	var reportEventChange = calendar.reportEventChange;
+	var getEventEnd = calendar.getEventEnd;
 	
 	
 	// locals
@@ -112,12 +111,6 @@ function View(element, calendar, viewName) {
 		eventsByID = {};
 		eventElementsByID = {};
 		eventElementCouples = [];
-	}
-	
-	
-	// returns a Moment object for an event's end
-	function eventEnd(event) {
-		return event.end ? event.end.clone() : defaultEventEnd(event);
 	}
 	
 	
@@ -262,7 +255,7 @@ function View(element, calendar, viewName) {
 		minuteDelta = minuteDelta || 0;
 		for (var e, len=events.length, i=0; i<len; i++) {
 			e = events[i];
-			e.end = eventEnd(e).add('days', dayDelta).add('minutes', minuteDelta);
+			e.end = getEventEnd(e).add('days', dayDelta).add('minutes', minuteDelta);
 		}
 	}
 

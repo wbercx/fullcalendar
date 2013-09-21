@@ -19,7 +19,6 @@ function BasicView(element, calendar, viewName) {
 	t.reportDayClick = reportDayClick; // for selection (kinda hacky)
 	t.dragStart = dragStart;
 	t.dragStop = dragStop;
-	t.defaultEventEnd = defaultEventEnd;
 	t.getHoverListener = function() { return hoverListener };
 	t.colLeft = colLeft;
 	t.colRight = colRight;
@@ -466,11 +465,6 @@ function BasicView(element, calendar, viewName) {
 	
 	/* Utilities
 	--------------------------------------------------------*/
-	
-	
-	function defaultEventEnd(event) {
-		return event.start.clone();
-	}
 	
 	
 	coordinateGrid = new CoordinateGrid(function(rows, cols) {
