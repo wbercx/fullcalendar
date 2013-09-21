@@ -25,50 +25,45 @@ fc.sourceNormalizers.push(function(sourceOptions) {
 
 fc.sourceFetchers.push(function(sourceOptions, start, end) {
 	if (sourceOptions.dataType == 'gcal') {
-		return transformOptions(sourceOptions, start, end);
+		return transformOptions(sourceOptions, start, end, this);
 	}
 });
 
 
-function transformOptions(sourceOptions, start, end) {
+function transformOptions(sourceOptions, start, end, calendar) {
 
 	var success = sourceOptions.success;
 	var data = $.extend({}, sourceOptions.data || {}, {
-		'start-min': start.format(), // ISO8601 (maybe more specific format str)
-		'start-max': end.format(),
 		'singleevents': true,
 		'max-results': 9999
 	});
-	
-	var ctz = sourceOptions.currentTimezone; // somehow use with Moment?
-	if (ctz) {
-		data.ctz = ctz = ctz.replace(' ', '_');
-	}
+	var timezone = calendar.options.timezone;
 
 	return $.extend({}, sourceOptions, {
 		url: sourceOptions.url.replace(/\/basic$/, '/full') + '?alt=json-in-script&callback=?',
 		dataType: 'jsonp',
 		data: data,
-		startParam: false,
-		endParam: false,
+		timezoneParam: 'ctz',
+		startParam: 'start-min',
+		endParam: 'start-max',
 		success: function(data) {
 			var events = [];
 			if (data.feed.entry) {
 				$.each(data.feed.entry, function(i, entry) {
 
-					// no more ignoreTimezone here!!! ahhh!!!!!
+					//console.log(entry['title']['$t'], entry['gd$when'][0]['startTime'], entry['gd$when'][0]['endTime']);
 
 					var startStr = entry['gd$when'][0]['startTime'];
-					var start = moment(startStr);
-					var end = moment(entry['gd$when'][0]['endTime']);
+					var start = calendar.moment(startStr);
+					var end = calendar.moment(entry['gd$when'][0]['endTime']);
 					var allDay = startStr.indexOf('T') == -1;
 					var url;
 
 					$.each(entry.link, function(i, link) {
 						if (link.type == 'text/html') {
 							url = link.href;
-							if (ctz) {
-								url += (url.indexOf('?') == -1 ? '?' : '&') + 'ctz=' + ctz;
+							if (timezone && timezone != 'local') {
+								url += (url.indexOf('?') == -1 ? '?' : '&') + 'ctz=' + timezone;
 							}
 						}
 					});

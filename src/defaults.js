@@ -23,12 +23,12 @@ var defaults = {
 	//disableResizing: false,
 	
 	allDayDefault: true,
-	ignoreTimezone: true,
 	
 	// event ajax
 	lazyFetching: true,
 	startParam: 'start',
 	endParam: 'end',
+	timezoneParam: 'timezone',
 	
 	// time formats
 	titleFormat: {

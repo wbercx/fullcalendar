@@ -48,11 +48,17 @@ function Calendar(element, instanceOptions) {
 	t.moment = function() {
 		var mom;
 
-		if (options.utc) {
-			mom = moment.utc.apply(moment, arguments);
+		if (options.timezone == 'local') {
+			mom = moment.apply(null, arguments);
 		}
 		else {
-			mom = moment.apply(undefined, arguments);
+			mom = moment.utc.apply(moment, arguments);
+
+			if (options.timezone != 'UTC') {
+				if (typeof arguments[0] === 'string') {
+					mom.zone(arguments[0]); // if invalid string, will go to zero anyway
+				}
+			}
 		}
 
 		applyLang(mom);
@@ -75,7 +81,7 @@ function Calendar(element, instanceOptions) {
 		// are we sure this should accept anything???
 
 		if (mom.isValid()) {
-			return t.utcMoment(getMomentValues(mom));
+			return t.utcMoment(mom.toArray());
 		}
 	};
 
@@ -90,7 +96,7 @@ function Calendar(element, instanceOptions) {
 
 		if (mom.isValid()) {
 
-			var real = t.moment(getMomentValues(mom));
+			var real = t.moment(mom.toArray());
 			var midday = t.moment([ mom.year(), mom.month(), mom.date(), 9 ]);
 
 			while (real.date() != midday.date()) {
@@ -104,19 +110,6 @@ function Calendar(element, instanceOptions) {
 
 	function applyLang(mom) {
 		mom.lang(options.lang);
-	}
-
-
-	function getMomentValues(mom) {
-		return [
-			mom.year(),
-			mom.month(),
-			mom.date(),
-			mom.hours(),
-			mom.minutes(),
-			mom.seconds(),
-			mom.milliseconds()
-		];
 	}
 
 

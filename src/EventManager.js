@@ -114,7 +114,7 @@ function EventManager(options) { // assumed to be a calendar
 		var res;
 
 		for (i=0; i<fetchers.length; i++) {
-			res = fetchers[i](source, realRangeStart.clone(), realRangeEnd.clone(), callback);
+			res = fetchers[i].call(t, source, realRangeStart.clone(), realRangeEnd.clone(), callback);
 			// ^ clone moments in case they are modified. we need them for later
 
 			if (res === true) {
@@ -167,12 +167,22 @@ function EventManager(options) { // assumed to be a calendar
 
 				var startParam = firstDefined(source.startParam, options.startParam);
 				var endParam = firstDefined(source.endParam, options.endParam);
+				var timezoneParam = firstDefined(source.timezoneParam, options.timezoneParam);
+
+				var formatStr = 'YYYY-MM-DD';
+				if (options.timezone == 'local' || options.timezone == 'UTC') {
+					formatStr += 'THH:mm:ssZ';
+				}
+
+				if (options.timezone && options.timezone != 'local') {
+					data[timezoneParam] = options.timezone;
+				}
 
 				if (startParam) {
-					data[startParam] = Math.round(+realRangeStart / 1000);
+					data[startParam] = realRangeStart.format(formatStr);
 				}
 				if (endParam) {
-					data[endParam] = Math.round(+realRangeEnd / 1000);
+					data[endParam] = realRangeEnd.format(formatStr);
 				}
 
 				pushLoading();
@@ -374,7 +384,6 @@ function EventManager(options) { // assumed to be a calendar
 	
 	function normalizeEvent(event) {
 		var source = event.source || {};
-		var ignoreTimezone = firstDefined(source.ignoreTimezone, options.ignoreTimezone);
 
 		event._id = event._id || (event.id === undefined ? '_fc' + eventGUID++ : event.id + '');
 
@@ -431,7 +440,7 @@ function EventManager(options) { // assumed to be a calendar
 		}
 		var normalizers = fc.sourceNormalizers;
 		for (var i=0; i<normalizers.length; i++) {
-			normalizers[i](source);
+			normalizers[i].call(t, source);
 		}
 	}
 	

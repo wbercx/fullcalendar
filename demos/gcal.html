@@ -13,9 +13,16 @@
 	$(document).ready(function() {
 	
 		$('#calendar').fullCalendar({
+
+			//timezone: 'Europe/Zurich',
+			//timezone: 'America/Chicago',
+			timezone: 'UTC',
 		
 			// US Holidays
-			events: 'http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic',
+			eventSources: [
+				'http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic',
+				'https://www.google.com/calendar/feeds/adamrshaw%40gmail.com/private-b5f43dec68f4e5ab7c158285d6d6780a/basic'
+			],
 			
 			eventClick: function(event) {
 				// opens events in a popup window
