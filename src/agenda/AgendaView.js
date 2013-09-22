@@ -121,6 +121,7 @@ function AgendaView(element, calendar, viewName) {
 	var hoverListener;
 	var colPositions;
 	var colContentPositions;
+	var slotTopCache = {};
 	
 	var tm;
 	var rtl;
@@ -195,7 +196,9 @@ function AgendaView(element, calendar, viewName) {
 			s =
 				"<table style='width:100%' class='fc-agenda-allday' cellspacing='0'>" +
 				"<tr>" +
-				"<th class='" + headerClass + " fc-agenda-axis'>" + opt('allDayText') + "</th>" +
+				"<th class='" + headerClass + " fc-agenda-axis'>" +
+				htmlEscape(opt('allDayText')) +
+				"</th>" +
 				"<td>" +
 				"<div class='fc-day-content'><div style='position:relative'/></div>" +
 				"</td>" +
@@ -245,7 +248,10 @@ function AgendaView(element, calendar, viewName) {
 			s +=
 				"<tr class='fc-slot" + i + ' ' + (!minutes ? '' : 'fc-minor') + "'>" +
 				"<th class='fc-agenda-axis " + headerClass + "'>" +
-				((!slotNormal || !minutes) ? formatDate(d, opt('axisFormat')) : '&nbsp;') +
+				((!slotNormal || !minutes) ?
+					htmlEscape(formatDate(d, opt('axisFormat'))) :
+					'&nbsp;'
+					) +
 				"</th>" +
 				"<td class='" + contentClass + "'>" +
 				"<div style='position:relative'>&nbsp;</div>" +
@@ -427,6 +433,7 @@ function AgendaView(element, calendar, viewName) {
 			height = viewHeight;
 		}
 		viewHeight = height;
+		slotTopCache = {};
 	
 		var headHeight = dayBody.position().top;
 		var allDayHeight = slotScroller.position().top; // including divider
@@ -444,7 +451,12 @@ function AgendaView(element, calendar, viewName) {
 		
 		// the stylesheet guarantees that the first row has no border.
 		// this allows .height() to work well cross-browser.
-		slotHeight = slotTable.find('tr:first').height() + 1; // +1 for bottom border
+		var slotHeight0 = slotTable.find('tr:first').height() + 1; // +1 for bottom border
+		var slotHeight1 = slotTable.find('tr:eq(1)').height();
+
+		// HACK: explain
+
+		slotHeight = (slotHeight0 + slotHeight1) / 2;
 
 		snapRatio = slotDuration / snapDuration;
 		snapHeight = slotHeight / snapRatio;
@@ -715,9 +727,24 @@ function AgendaView(element, calendar, viewName) {
 	function timePosition(day, time) { // both Moment objects. day holds 00:00 of current day
 		day = day.clone().startOf('day');
 
-		var top = (time - day - minTime) / slotDuration * slotHeight;
+		var slots = (time - day - minTime) / slotDuration;
+		var slotIndex = Math.floor(slots);
+		var slotPartial = slots - slotIndex;
+		var slotTop = slotTopCache[slotIndex];
 
-		top -= 1; // because we want the top edge to be on the border
+		// find the position of the corresponding <tr>
+		// need to use this tecnhique because not all rows are rendered at same height sometimes.
+		if (slotTop === undefined) {
+			slotTop = slotTopCache[slotIndex] =
+				slotTable.find('tr').eq(slotIndex).find('td div')[0].offsetTop;
+				// .eq() is faster than ":eq()" selector
+				// [0].offsetTop is faster than .position().top (do we really need this optimization?)
+				// a better optimization would be to cache all these divs
+		}
+
+		var top =
+			slotTop - 1 + // because first row doesn't have a top border
+			slotPartial * slotHeight; // part-way through the row
 
 		top = Math.max(top, 0);
 		top = Math.min(top, slotTable.height()); // TODO: maybe cache the height?

@@ -134,8 +134,8 @@ function Calendar(element, instanceOptions) {
 	}
 
 
-	t.formatRange = function(m1, m2, formatStr) {
-		return formatRange(m1, m2, formatStr, ' - ', options.isRTL);
+	t.formatRange = function(m1, m2, formatStr, separator) {
+		return formatRange(m1, m2, formatStr, separator, options.isRTL);
 	};
 
 
@@ -494,7 +494,8 @@ function Calendar(element, instanceOptions) {
 			t.formatRange(
 				currentView.intervalStart,
 				currentView.intervalEnd.clone().add('ms', -1),
-				currentView.opt('titleFormat')
+				currentView.opt('titleFormat'),
+				' \u2014 ' // emphasized dash
 			)
 		);
 	}

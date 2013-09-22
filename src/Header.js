@@ -68,16 +68,25 @@ function Header(calendar, options) {
 							};
 						}
 						if (buttonClick) {
-							var icon = options.theme ? smartProperty(options.buttonIcons, buttonName) : null; // why are we using smartProperty here?
-							var text = smartProperty(options.buttonText, buttonName); // why are we using smartProperty here?
+
+							// smartProperty allows different text per view button (ex: "Agenda Week" vs "Basic Week")
+							var html = smartProperty(options.buttonHTML, buttonName); // in order of precedence here
+							var icon = smartProperty(options.buttonIcons, buttonName);
+							var text = smartProperty(options.buttonText, buttonName);
+
+							if (!html && icon && options.theme) {
+								html =
+									"<span class='fc-icon-wrap'>" +
+										"<span class='ui-icon ui-icon-" + icon + "'/>" +
+									"</span>";
+							}
+							if (!html) {
+								html = htmlEscape(text);
+							}
+
 							var button = $(
 								"<span class='fc-button fc-button-" + buttonName + " " + tm + "-state-default'>" +
-									(icon ?
-										"<span class='fc-icon-wrap'>" +
-											"<span class='ui-icon ui-icon-" + icon + "'/>" +
-										"</span>" :
-										text
-										) +
+									html +
 								"</span>"
 								)
 								.click(function() {

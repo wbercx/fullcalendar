@@ -51,14 +51,21 @@ var defaults = {
 	// locale
 	isRTL: false,
 	buttonText: {
-		prev: "<span class='fc-text-arrow'>&lsaquo;</span>",
-		next: "<span class='fc-text-arrow'>&rsaquo;</span>",
-		prevYear: "<span class='fc-text-arrow'>&laquo;</span>",
-		nextYear: "<span class='fc-text-arrow'>&raquo;</span>",
+		prev: "previous",
+		next: "next",
+		prevYear: "previous year",
+		nextYear: "next year",
 		today: 'today',
 		month: 'month',
 		week: 'week',
 		day: 'day'
+	},
+
+	buttonHTML: {
+		prev: "<span class='fc-text-arrow'>&lsaquo;</span>",
+		next: "<span class='fc-text-arrow'>&rsaquo;</span>",
+		prevYear: "<span class='fc-text-arrow'>&laquo;</span>",
+		nextYear: "<span class='fc-text-arrow'>&raquo;</span>"
 	},
 	
 	// jquery-ui theming

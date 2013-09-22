@@ -11,9 +11,9 @@
 <script src='../build/out/fullcalendar.js'></script>
 <!--
 <script src='../build/out/lang/en-gb.js'></script>
-<script src='../build/out/lang/zh-cn.js'></script>
 <script src='../build/out/lang/ar.js'></script>
 <script src='../build/out/lang/fr.js'></script>
+<script src='../build/out/lang/zh-cn.js'></script>
 -->
 <script>
 
@@ -36,6 +36,13 @@
 			//dayNamesShort: [ 'Hey', 'My', 'Nam', 'Is', 'Ada', 'M', 'Sha' ],
 
 			//firstDay: 3,
+
+			/*
+			buttonHTML: {
+				prev: false,
+				next: false
+			},
+			*/
 
 			events: [
 				{
@@ -90,7 +97,7 @@
 				}
 			],
 
-			//timezone: 'local',
+			timezone: 'local',
 
 			weekNumbers: true,
 			dayClick: function(date, allDay, jsEvent, view) {
