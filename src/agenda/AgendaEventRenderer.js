@@ -20,8 +20,6 @@ function AgendaEventRenderer() {
 	var getDaySegmentContainer = t.getDaySegmentContainer;
 	var getSlotSegmentContainer = t.getSlotSegmentContainer;
 	var getHoverListener = t.getHoverListener;
-	var getMaxMinute = t.getMaxMinute;
-	var getMinMinute = t.getMinMinute;
 	var timePosition = t.timePosition;
 	var getIsCellAllDay = t.getIsCellAllDay;
 	var colContentLeft = t.colContentLeft;
@@ -31,6 +29,8 @@ function AgendaEventRenderer() {
 	var getColWidth = t.getColWidth;
 	var getSnapHeight = t.getSnapHeight;
 	var getSnapDuration = t.getSnapDuration;
+	var getSlotHeight = t.getSlotHeight;
+	var getSlotDuration = t.getSlotDuration;
 	var getSlotContainer = t.getSlotContainer;
 	var reportEventElement = t.reportEventElement;
 	var showEvents = t.showEvents;
@@ -40,6 +40,8 @@ function AgendaEventRenderer() {
 	var renderDayOverlay = t.renderDayOverlay;
 	var clearOverlays = t.clearOverlays;
 	var renderDayEvents = t.renderDayEvents;
+	var getMinTime = t.getMinTime;
+	var getMaxTime = t.getMaxTime;
 	var calendar = t.calendar;
 	var formatRange = calendar.formatRange;
 	var getEventEnd = calendar.getEventEnd;
@@ -83,8 +85,8 @@ function AgendaEventRenderer() {
 	
 	function compileSlotSegs(events) {
 		var colCnt = getColCnt(),
-			minMinute = getMinMinute(),
-			maxMinute = getMaxMinute(),
+			minTime = getMinTime(),
+			maxTime = getMaxTime(),
 			d,
 			i,
 			j, seg,
@@ -93,12 +95,11 @@ function AgendaEventRenderer() {
 
 		for (i=0; i<colCnt; i++) {
 			d = cellToDate(0, i);
-			d.add('minutes', minMinute);
 
 			colSegs = sliceSegs(
 				events,
-				d,
-				d.clone().add('minutes', maxMinute-minMinute)
+				d.clone().add(minTime),
+				d.clone().add(maxTime)
 			);
 
 			colSegs = placeSlotSegs(colSegs); // returns a new order
@@ -387,85 +388,113 @@ function AgendaEventRenderer() {
 		var revert;
 		var allDay = true;
 		var dayDelta;
+
 		var hoverListener = getHoverListener();
 		var colWidth = getColWidth();
+		var minTime = getMinTime();
+		var slotDuration = getSlotDuration();
+		var slotHeight = getSlotHeight();
+		var snapDuration = getSnapDuration();
 		var snapHeight = getSnapHeight();
-		var snapMinutes = getSnapDuration().asMinutes();
-		var minMinute = getMinMinute();
+
 		eventElement.draggable({
 			opacity: opt('dragOpacity', 'month'), // use whatever the month view was using
 			revertDuration: opt('dragRevertDuration'),
 			start: function(ev, ui) {
+
 				trigger('eventDragStart', eventElement, event, ev, ui);
 				hideEvents(event, eventElement);
 				origWidth = eventElement.width();
+
 				hoverListener.start(function(cell, origCell) {
 					clearOverlays();
 					if (cell) {
 						revert = false;
+
 						var origDate = cellToDate(0, origCell.col);
 						var date = cellToDate(0, cell.col);
 						dayDelta = date.diff(origDate, 'days');
-						if (!cell.row) {
-							// on full-days
+
+						if (!cell.row) { // on full-days
+							
 							renderDayOverlay(
 								event.start.clone().add('days', dayDelta),
 								getEventEnd(event).add('days', dayDelta)
 							);
+
 							resetElement();
-						}else{
-							// mouse is over bottom slots
+						}
+						else { // mouse is over bottom slots
+
 							if (isStart) {
 								if (allDay) {
 									// convert event to temporary slot-event
 
 									eventElement.width(colWidth - 10); // don't use entire width
 
-									var eventMinutes = moment.duration(
+									var eventDuration = moment.duration(
 										event.end ?
 											event.end - event.start :
 											opt('defaultEventDuration')
-									).asMinutes();
-
-									setOuterHeight(
-										eventElement,
-										snapHeight * Math.round(eventMinutes / snapMinutes)
 									);
 
-									eventElement.draggable('option', 'grid', [colWidth, 1]);
+									var height = eventDuration / slotDuration * slotHeight;
+
+									setOuterHeight(eventElement, height);
+									eventElement.draggable('option', 'grid', [ colWidth, 1 ]);
 									allDay = false;
 								}
-							}else{
+							}
+							else {
 								revert = true;
 							}
 						}
+
 						revert = revert || (allDay && !dayDelta);
-					}else{
+					}
+					else {
 						resetElement();
 						revert = true;
 					}
+
 					eventElement.draggable('option', 'revert', revert);
+
 				}, ev, 'drag');
 			},
 			stop: function(ev, ui) {
 				hoverListener.stop();
 				clearOverlays();
 				trigger('eventDragStop', eventElement, event, ev, ui);
-				if (revert) {
-					// hasn't moved or is out of bounds (draggable has already reverted)
+
+				if (revert) { // hasn't moved or is out of bounds (draggable has already reverted)
+					
 					resetElement();
 					eventElement.css('filter', ''); // clear IE opacity side-effects
 					showEvents(event, eventElement);
-				}else{
-					// changed!
-					var minuteDelta = 0;
+				}
+				else { // changed!
+
+					var deltaDuration = moment.duration({ days: dayDelta });
 					if (!allDay) {
-						minuteDelta = Math.round((eventElement.offset().top - getSlotContainer().offset().top) / snapHeight)
-							* snapMinutes
-							+ minMinute
-							- (event.start.hours() * 60 + event.start.minutes());
+						var snapIndex = Math.round((eventElement.offset().top - getSlotContainer().offset().top) / snapHeight); // why not use ui.offset.top?
+						deltaDuration.add(minTime + snapIndex * snapDuration);
+						deltaDuration.subtract(event.start - event.start.clone().startOf('day')); // TODO: doc
+
+						// WORKAROUND. will be fixed in moment 2.2.2
+						deltaDuration = moment.duration({
+							days: deltaDuration._days,
+							ms: deltaDuration._milliseconds
+						});
 					}
-					eventDrop(this, event, dayDelta, minuteDelta, allDay, ev, ui); // TODO: use a Moment duration!!!
+
+					eventDrop(
+						this,
+						event,
+						deltaDuration,
+						allDay,
+						ev,
+						ui
+					);
 				}
 			}
 		});
@@ -488,7 +517,7 @@ function AgendaEventRenderer() {
 		var colCnt = getColCnt();
 		var colWidth = getColWidth();
 		var snapHeight = getSnapHeight();
-		var snapMinutes = getSnapDuration().asMinutes();
+		var snapDuration = getSnapDuration();
 
 		// states
 		var origPosition; // original position of the element, not the mouse
@@ -497,7 +526,7 @@ function AgendaEventRenderer() {
 		var isAllDay, prevIsAllDay;
 		var colDelta, prevColDelta;
 		var dayDelta; // derived from colDelta
-		var minuteDelta, prevMinuteDelta;
+		var snapDelta, prevSnapDelta;
 
 		eventElement.draggable({
 			scroll: false,
@@ -519,7 +548,7 @@ function AgendaEventRenderer() {
 				isAllDay = prevIsAllDay = getIsCellAllDay(origCell);
 				colDelta = prevColDelta = 0;
 				dayDelta = 0;
-				minuteDelta = prevMinuteDelta = 0;
+				snapDelta = prevSnapDelta = 0;
 
 			},
 			drag: function(ev, ui) {
@@ -551,7 +580,7 @@ function AgendaEventRenderer() {
 
 					// calculate minute delta (only if over slots)
 					if (!isAllDay) {
-						minuteDelta = Math.round((ui.position.top - origPosition.top) / snapHeight) * snapMinutes;
+						snapDelta = Math.round((ui.position.top - origPosition.top) / snapHeight);
 					}
 				}
 
@@ -560,7 +589,7 @@ function AgendaEventRenderer() {
 					isInBounds != prevIsInBounds ||
 					isAllDay != prevIsAllDay ||
 					colDelta != prevColDelta ||
-					minuteDelta != prevMinuteDelta
+					snapDelta != prevSnapDelta
 				) {
 
 					updateUI();
@@ -569,7 +598,7 @@ function AgendaEventRenderer() {
 					prevIsInBounds = isInBounds;
 					prevIsAllDay = isAllDay;
 					prevColDelta = colDelta;
-					prevMinuteDelta = minuteDelta;
+					prevSnapDelta = snapDelta;
 				}
 
 				// if out-of-bounds, revert when done, and vice versa.
@@ -581,8 +610,27 @@ function AgendaEventRenderer() {
 				clearOverlays();
 				trigger('eventDragStop', eventElement, event, ev, ui);
 
-				if (isInBounds && (isAllDay || dayDelta || minuteDelta)) { // changed!
-					eventDrop(this, event, dayDelta, isAllDay ? 0 : minuteDelta, isAllDay, ev, ui);
+				if (isInBounds && (isAllDay || dayDelta || snapDelta)) { // changed!
+
+					var deltaDuration = moment.duration({ days: dayDelta });
+					if (!isAllDay) {
+						deltaDuration.add(snapDuration * snapDelta);
+
+						// WORKAROUND. will be fixed in moment 2.2.2
+						deltaDuration = moment.duration({
+							days: deltaDuration._days,
+							ms: deltaDuration._milliseconds
+						});
+					}
+
+					eventDrop(
+						this,
+						event,
+						deltaDuration,
+						isAllDay,
+						ev,
+						ui
+					);
 				}
 				else { // either no change or out-of-bounds (draggable has already reverted)
 
@@ -591,7 +639,7 @@ function AgendaEventRenderer() {
 					isAllDay = false;
 					colDelta = 0;
 					dayDelta = 0;
-					minuteDelta = 0;
+					snapDelta = 0;
 
 					updateUI();
 					eventElement.css('filter', ''); // clear IE opacity side-effects
@@ -618,20 +666,20 @@ function AgendaEventRenderer() {
 					);
 				}
 				else {
-					updateTimeText(minuteDelta);
+					updateTimeText(snapDelta);
 					timeElement.css('display', ''); // show() was causing display=inline
 					eventElement.draggable('option', 'grid', [colWidth, snapHeight]); // re-enable grid snapping
 				}
 			}
 		}
 
-		function updateTimeText(minuteDelta) {
-			var newStart = event.start.clone().add('minutes', minuteDelta);
+		function updateTimeText(snapDelta) {
+			var newStart = event.start.clone().add(snapDuration * snapDelta);
 			var newEnd;
 			var text;
 
 			if (event.end) {
-				newEnd = event.end.clone().add('minutes', minuteDelta);
+				newEnd = event.end.clone().add(snapDuration * snapDelta);
 				text = formatRange(newStart, newEnd, opt('timeFormat'));
 			}
 			else {
@@ -652,7 +700,8 @@ function AgendaEventRenderer() {
 	function resizableSlotEvent(event, eventElement, timeElement) {
 		var snapDelta, prevSnapDelta;
 		var snapHeight = getSnapHeight();
-		var snapMinutes = getSnapDuration().asMinutes();
+		var snapDuration = getSnapDuration();
+
 		eventElement.resizable({
 			handles: {
 				s: '.ui-resizable-handle'
@@ -671,7 +720,7 @@ function AgendaEventRenderer() {
 					if (snapDelta || event.end) {
 						text = formatRange(
 							event.start,
-							getEventEnd(event).add('minutes', snapMinutes*snapDelta),
+							getEventEnd(event).add(snapDuration * snapDelta),
 							opt('timeFormat')
 						);
 					}
@@ -685,8 +734,18 @@ function AgendaEventRenderer() {
 			stop: function(ev, ui) {
 				trigger('eventResizeStop', this, event, ev, ui);
 				if (snapDelta) {
-					eventResize(this, event, 0, snapMinutes*snapDelta, ev, ui);
-				}else{
+
+					var deltaDuration = moment.duration(snapDuration * snapDelta);
+
+					eventResize(
+						this,
+						event,
+						deltaDuration,
+						ev,
+						ui
+					);
+				}
+				else {
 					showEvents(event, eventElement);
 					// BUG: if event was really short, need to put title back in span
 				}

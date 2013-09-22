@@ -182,15 +182,8 @@ function DayEventRenderer() {
 	// with the addition of the `event` property being set to reference the original event.
 	function buildSegmentsForEvent(event) {
 
-		var start = event.start.clone().startOf('day');
-		var end = getEventEnd(event);
-
-		if (end.hours() || end.minutes() || end.seconds()) {
-			end.add('days', 1).startOf('day');
-		}
-
-		start = calendar.idealMoment(start);
-		end = calendar.idealMoment(end);
+		var start = calendar.idealMoment(event.start).startOf('day');
+		var end = calendar.idealMoment(getEventEnd(event));
 
 		var segments = rangeToSegments(start, end);
 		for (var i=0; i<segments.length; i++) {
@@ -589,9 +582,11 @@ function DayEventRenderer() {
 					eventElement.draggable('option', 'revert', !cell || !rowDelta && !colDelta);
 					clearOverlays();
 					if (cell) {
+
 						var origDate = cellToDate(origCell);
 						var date = cellToDate(cell);
 						dayDelta = date.diff(origDate, 'days');
+
 						renderDayOverlay(
 							event.start.clone().add('days', dayDelta),
 							getEventEnd(event).add('days', dayDelta)
@@ -606,8 +601,16 @@ function DayEventRenderer() {
 				clearOverlays();
 				trigger('eventDragStop', eventElement, event, ev, ui);
 				if (dayDelta) {
-					eventDrop(this, event, dayDelta, 0, event.allDay, ev, ui);
-				}else{
+					eventDrop(
+						this,
+						event,
+						moment.duration({ days: dayDelta }),
+						event.allDay,
+						ev,
+						ui
+					);
+				}
+				else {
 					eventElement.css('filter', ''); // clear IE opacity side-effects
 					showEvents(event, eventElement);
 				}
@@ -704,7 +707,12 @@ function DayEventRenderer() {
 				hoverListener.stop();
 				clearOverlays();
 				if (dayDelta) {
-					eventResize(this, event, dayDelta, 0, ev);
+					eventResize(
+						this,
+						event,
+						moment.duration({ day: dayDelta }),
+						ev
+					);
 					// event redraw will clear helpers
 				}
 				// otherwise, the drag handler already restored the old events

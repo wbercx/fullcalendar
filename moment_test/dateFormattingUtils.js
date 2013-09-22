@@ -1,26 +1,6 @@
 
 var dayIDs = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
-function parseTime(s) { // returns minutes since start of day
-	if (typeof s == 'number') { // an hour
-		return s * 60;
-	}
-	if (typeof s == 'object') { // a Date object
-		return s.getHours() * 60 + s.getMinutes();
-	}
-	var m = s.match(/(\d+)(?::(\d+))?\s*(\w+)?/);
-	if (m) {
-		var h = parseInt(m[1], 10);
-		if (m[3]) {
-			h %= 12;
-			if (m[3].toLowerCase().charAt(0) == 'p') {
-				h += 12;
-			}
-		}
-		return h * 60 + (m[2] ? parseInt(m[2], 10) : 0);
-	}
-}
-
 moment.fn.weekday = function (input) { // bugfix
 	var weekday = (this.day() + 7 - this.lang()._week.dow) % 7;
 	return input == null ? weekday : this.add("d", input - weekday);
@@ -151,7 +131,7 @@ function formatRangeWithChunks(date1, date2, chunks, separator, isRTL) {
 		middleStr2 += formatDateWithChunk(date2, chunks[middleI]);
 	}
 
-	if (middleStr1 !== middleStr2) {
+	if (middleStr1 || middleStr2) {
 		if (isRTL) {
 			middleStr = middleStr2 + separator + middleStr1;
 		}

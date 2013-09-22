@@ -187,20 +187,19 @@ function View(element, calendar, viewName) {
 	---------------------------------------------------------------------------------*/
 	
 	
-	function eventDrop(e, event, dayDelta, minuteDelta, allDay, ev, ui) {
+	function eventDrop(e, event, duration, allDay, ev, ui) {
 		var oldAllDay = event.allDay;
 		var eventId = event._id;
-		moveEvents(eventsByID[eventId], dayDelta, minuteDelta, allDay);
+		moveEvents(eventsByID[eventId], duration, allDay);
 		trigger(
 			'eventDrop',
 			e,
 			event,
-			dayDelta,
-			minuteDelta,
+			duration,
 			allDay,
 			function() {
 				// TODO: investigate cases where this inverse technique might not work
-				moveEvents(eventsByID[eventId], -dayDelta, -minuteDelta, oldAllDay);
+				moveEvents(eventsByID[eventId], duration, oldAllDay, true);
 				reportEventChange(eventId);
 			},
 			ev,
@@ -210,18 +209,17 @@ function View(element, calendar, viewName) {
 	}
 	
 	
-	function eventResize(e, event, dayDelta, minuteDelta, ev, ui) {
+	function eventResize(e, event, duration, ev, ui) {
 		var eventId = event._id;
-		elongateEvents(eventsByID[eventId], dayDelta, minuteDelta);
+		elongateEvents(eventsByID[eventId], duration);
 		trigger(
 			'eventResize',
 			e,
 			event,
-			dayDelta,
-			minuteDelta,
+			duration,
 			function() {
 				// TODO: investigate cases where this inverse technique might not work
-				elongateEvents(eventsByID[eventId], -dayDelta, -minuteDelta);
+				elongateEvents(eventsByID[eventId], duration, true);
 				reportEventChange(eventId);
 			},
 			ev,
@@ -236,26 +234,37 @@ function View(element, calendar, viewName) {
 	---------------------------------------------------------------------------------*/
 	
 	
-	function moveEvents(events, dayDelta, minuteDelta, allDay) {
-		minuteDelta = minuteDelta || 0;
+	function moveEvents(events, duration, allDay, doInverseDuration) {
 		for (var e, len=events.length, i=0; i<len; i++) {
 			e = events[i];
 			if (allDay !== undefined) {
 				e.allDay = allDay;
 			}
-			e.start.add('days', dayDelta).add('minutes', minuteDelta);
-			if (e.end) {
-				e.end.add('days', dayDelta).add('minutes', minuteDelta);
+			if (doInverseDuration) {
+				e.start.subtract(duration);
+				if (e.end) {
+					e.end.subtract(duration);
+				}
+			}
+			else {
+				e.start.add(duration);
+				if (e.end) {
+					e.end.add(duration);
+				}
 			}
 		}
 	}
 	
 	
-	function elongateEvents(events, dayDelta, minuteDelta) {
-		minuteDelta = minuteDelta || 0;
+	function elongateEvents(events, duration, doInverseDuration) {
 		for (var e, len=events.length, i=0; i<len; i++) {
 			e = events[i];
-			e.end = getEventEnd(e).add('days', dayDelta).add('minutes', minuteDelta);
+			if (doInverseDuration) {
+				e.end = getEventEnd(e).subtract(duration);
+			}
+			else {
+				e.end = getEventEnd(e).add(duration);
+			}
 		}
 	}
 
@@ -472,6 +481,10 @@ function View(element, calendar, viewName) {
 		var rowCnt = t.getRowCnt();
 		var colCnt = t.getColCnt();
 		var segments = []; // array of segments to return
+
+		if (endDate.hours() || endDate.minutes() || endDate.seconds() || endDate.milliseconds()) {
+			endDate = endDate.clone().add('days', 1);
+		}
 
 		// day offset for given date range
 		var rangeDayOffsetStart = dateToDayOffset(startDate);

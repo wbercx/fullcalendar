@@ -13,8 +13,8 @@ setDefaults({
 	dragOpacity: {
 		agenda: .5
 	},
-	minTime: 0,
-	maxTime: 24,
+	minTime: '00:00:00',
+	maxTime: '24:00:00',
 	slotEventOverlap: true
 });
 
@@ -43,14 +43,16 @@ function AgendaView(element, calendar, viewName) {
 	t.colContentRight = colContentRight;
 	t.getDaySegmentContainer = function() { return daySegmentContainer };
 	t.getSlotSegmentContainer = function() { return slotSegmentContainer };
-	t.getMinMinute = function() { return minMinute };
-	t.getMaxMinute = function() { return maxMinute };
 	t.getSlotContainer = function() { return slotContainer };
 	t.getRowCnt = function() { return 1 };
 	t.getColCnt = function() { return colCnt };
 	t.getColWidth = function() { return colWidth };
 	t.getSnapHeight = function() { return snapHeight };
 	t.getSnapDuration = function() { return snapDuration };
+	t.getSlotHeight = function() { return slotHeight };
+	t.getSlotDuration = function() { return slotDuration };
+	t.getMinTime = function() { return minTime };
+	t.getMaxTime = function() { return maxTime };
 	t.defaultSelectionEnd = defaultSelectionEnd;
 	t.renderDayOverlay = renderDayOverlay;
 	t.renderSelection = renderSelection;
@@ -104,9 +106,10 @@ function AgendaView(element, calendar, viewName) {
 	var axisWidth;
 	var colWidth;
 	var gutterWidth;
-	var slotHeight; // TODO: what if slotHeight changes? (see issue 650)
 
 	var slotDuration;
+	var slotHeight; // TODO: what if slotHeight changes? (see issue 650)
+
 	var snapDuration;
 	var snapRatio; // ratio of number of "selection" slots to normal slots. (ex: 1, 2, 4)
 	var snapHeight; // holds the pixel hight of a "selection" slot
@@ -117,11 +120,11 @@ function AgendaView(element, calendar, viewName) {
 	var hoverListener;
 	var colPositions;
 	var colContentPositions;
-	var slotTopCache = {};
 	
 	var tm;
 	var rtl;
-	var minMinute, maxMinute;
+	var minTime;
+	var maxTime;
 	var colFormat;
 	var showWeekNumbers;
 	var weekNumberTitle;
@@ -153,9 +156,10 @@ function AgendaView(element, calendar, viewName) {
 
 		tm = opt('theme') ? 'ui' : 'fc';
 		rtl = opt('isRTL')
-		minMinute = parseTime(opt('minTime'));
-		maxMinute = parseTime(opt('maxTime'));
 		colFormat = opt('columnFormat');
+
+		minTime = moment.duration(opt('minTime'));
+		maxTime = moment.duration(opt('maxTime'));
 
 		// week # options. (TODO: bad, logic also in other views)
 		showWeekNumbers = opt('weekNumbers');
@@ -244,8 +248,8 @@ function AgendaView(element, calendar, viewName) {
 			"<tbody>";
 
 		d = t.start.clone();
-		maxd = d.clone().add('minutes', maxMinute);
-		d.add('minutes', minMinute);
+		maxd = d.clone().add(maxTime);
+		d.add(minTime);
 
 		slotCnt = 0;
 		for (i=0; d < maxd; i++) {
@@ -435,7 +439,6 @@ function AgendaView(element, calendar, viewName) {
 			height = viewHeight;
 		}
 		viewHeight = height;
-		slotTopCache = {};
 	
 		var headHeight = dayBody.position().top;
 		var allDayHeight = slotScroller.position().top; // including divider
@@ -552,17 +555,25 @@ function AgendaView(element, calendar, viewName) {
 		if (!opt('selectable')) { // if selectable, SelectionManager will worry about dayClick
 			var col = Math.min(colCnt-1, Math.floor((ev.pageX - dayTable.offset().left - axisWidth) / colWidth));
 			var date = cellToDate(0, col);
-			var rowMatch = this.parentNode.className.match(/fc-slot(\d+)/); // TODO: maybe use data
-			if (rowMatch) {
-				var mins = parseInt(rowMatch[1]) * slotDuration.asMinutes();
-				var hours = Math.floor(mins/60);
-				date.hours(hours);
-				date.minutes(mins%60 + minMinute);
-				date = calendar.realMoment(date);
-				trigger('dayClick', dayBodyCells[col], date, false, ev);
+			var match = this.parentNode.className.match(/fc-slot(\d+)/); // TODO: maybe use data
+			if (match) {
+				var slotIndex = parseInt(match[1]);
+				date.add('ms', minTime + slotDuration * slotIndex);
+				trigger(
+					'dayClick',
+					dayBodyCells[col],
+					calendar.realMoment(date),
+					false,
+					ev
+				);
 			}else{
-				date = calendar.realMoment(date);
-				trigger('dayClick', dayBodyCells[col], date, true, ev);
+				trigger(
+					'dayClick',
+					dayBodyCells[col],
+					calendar.realMoment(date),
+					true,
+					ev
+				);
 			}
 		}
 	}
@@ -706,7 +717,7 @@ function AgendaView(element, calendar, viewName) {
 			slotIndex--;
 		}
 		if (slotIndex >= 0) {
-			d.add('minutes', minMinute + slotIndex * snapDuration.asMinutes());
+			d.add('ms', minTime + slotDuration * slotIndex);
 		}
 		return d;
 	}
@@ -715,26 +726,15 @@ function AgendaView(element, calendar, viewName) {
 	// get the Y coordinate of the given time on the given day (both Moment objects)
 	function timePosition(day, time) { // both Moment objects. day holds 00:00 of current day
 		day = day.clone().startOf('day');
-		if (time < day.clone().add('minutes', minMinute)) {
-			return 0;
-		}
-		if (time >= day.clone().add('minutes', maxMinute)) {
-			return slotTable.height();
-		}
-		var slotMinutes = slotDuration.asMinutes(),
-			minutes = time.hours()*60 + time.minutes() - minMinute,
-			slotI = Math.floor(minutes / slotMinutes),
-			slotTop = slotTopCache[slotI];
-		if (slotTop === undefined) {
-			slotTop = slotTopCache[slotI] =
-				slotTable.find('tr').eq(slotI).find('td div')[0].offsetTop;
-				// .eq() is faster than ":eq()" selector
-				// [0].offsetTop is faster than .position().top (do we really need this optimization?)
-				// a better optimization would be to cache all these divs
-		}
-		return Math.max(0, Math.round(
-			slotTop - 1 + slotHeight * ((minutes % slotMinutes) / slotMinutes)
-		));
+
+		var top = (time - day - minTime) / slotDuration * slotHeight;
+
+		top -= 1; // because we want the top edge to be on the border
+
+		top = Math.max(top, 0);
+		top = Math.min(top, slotTable.height()); // TODO: maybe cache the height?
+
+		return top;
 	}
 	
 	
