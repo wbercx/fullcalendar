@@ -86,8 +86,11 @@ function SelectionManager() {
 				clearSelection();
 				if (cell && getIsCellAllDay(cell)) {
 					dates = [ cellToDate(origCell), cellToDate(cell) ].sort(dateCompare);
-					dates[1].add('days', 1); // make exclusive
-					renderSelection(dates[0], dates[1], true);
+					renderSelection(
+						dates[0],
+						dates[1].clone().add('days', 1), // make exclusive
+						true
+					);
 				}else{
 					dates = null;
 				}
@@ -98,7 +101,12 @@ function SelectionManager() {
 					if (+dates[0] == +dates[1]) {
 						reportDayClick(dates[0], true, ev);
 					}
-					reportSelection(dates[0], dates[1], true, ev);
+					reportSelection(
+						dates[0],
+						dates[1].clone().add('days', 1), // make exclusive
+						true,
+						ev
+					);
 				}
 			});
 		}

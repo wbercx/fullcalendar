@@ -75,8 +75,6 @@ function BasicView(element, calendar, viewName) {
 	var tm;
 	var colFormat;
 	var showWeekNumbers;
-	var weekNumberTitle;
-	var weekNumberFormat;
 	
 	
 	
@@ -104,16 +102,7 @@ function BasicView(element, calendar, viewName) {
 	function updateOptions() {
 		tm = opt('theme') ? 'ui' : 'fc';
 		colFormat = opt('columnFormat');
-
-		// week # options. (TODO: bad, logic also in other views)
 		showWeekNumbers = opt('weekNumbers');
-		weekNumberTitle = opt('weekNumberTitle');
-		if (opt('weekNumberCalculation') != 'iso') {
-			weekNumberFormat = "w";
-		}
-		else {
-			weekNumberFormat = "W";
-		}
 	}
 	
 	
@@ -186,7 +175,7 @@ function BasicView(element, calendar, viewName) {
 		if (showWeekNumbers) {
 			html +=
 				"<th class='fc-week-number " + headerClass + "'>" +
-				htmlEscape(weekNumberTitle) +
+				htmlEscape(opt('weekNumberTitle')) +
 				"</th>";
 		}
 
@@ -222,7 +211,7 @@ function BasicView(element, calendar, viewName) {
 				html +=
 					"<td class='fc-week-number " + contentClass + "'>" +
 					"<div>" +
-					htmlEscape(formatDate(date, weekNumberFormat)) +
+					htmlEscape(formatDate(date, opt('weekNumberFormat'))) +
 					"</div>" +
 					"</td>";
 			}

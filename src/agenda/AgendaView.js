@@ -127,9 +127,6 @@ function AgendaView(element, calendar, viewName) {
 	var minTime;
 	var maxTime;
 	var colFormat;
-	var showWeekNumbers;
-	var weekNumberTitle;
-	var weekNumberFormat;
 	
 
 	
@@ -161,16 +158,6 @@ function AgendaView(element, calendar, viewName) {
 
 		minTime = moment.duration(opt('minTime'));
 		maxTime = moment.duration(opt('maxTime'));
-
-		// week # options. (TODO: bad, logic also in other views)
-		showWeekNumbers = opt('weekNumbers');
-		weekNumberTitle = opt('weekNumberTitle');
-		if (opt('weekNumberCalculation') != 'iso') {
-			weekNumberFormat = "w";
-		}
-		else {
-			weekNumberFormat = "W";
-		}
 
 		slotDuration = moment.duration(opt('slotDuration'));
 		snapDuration = opt('snapDuration');
@@ -330,14 +317,14 @@ function AgendaView(element, calendar, viewName) {
 			"<thead>" +
 			"<tr>";
 
-		if (showWeekNumbers) {
+		if (opt('weekNumbers')) {
 			date = cellToDate(0, 0);
-			weekText = formatDate(date, weekNumberFormat);
+			weekText = formatDate(date, opt('weekNumberFormat'));
 			if (rtl) {
-				weekText += weekNumberTitle;
+				weekText += opt('weekNumberTitle');
 			}
 			else {
-				weekText = weekNumberTitle + weekText;
+				weekText = opt('weekNumberTitle') + weekText;
 			}
 			html +=
 				"<th class='fc-agenda-axis fc-week-number " + headerClass + "'>" +

@@ -17,8 +17,8 @@ var defaults = {
 	weekends: true,
 	weekNumbers: false,
 
-	weekNumberCalculation: 'iso', // needs updating with Moment
-	weekNumberTitle: 'W',         //
+	weekNumberTitle: 'W',
+	weekNumberFormat: 'w', // 'w' for local (default), 'W' for ISO
 	
 	// editing
 	//editable: false,

@@ -35,6 +35,16 @@ function View(element, calendar, viewName) {
 	var eventElementsByID = {}; // eventID mapped to array of jQuery elements
 	var eventElementCouples = []; // array of objects, { event, element } // TODO: unify with segment system
 	var options = calendar.options;
+
+
+	t.getStart = function() {
+		return calendar.realMoment(t.start);
+	};
+
+	t.getEnd = function() {
+		return calendar.realMoment(t.end);
+	};
+
 	
 	
 	

@@ -34,6 +34,9 @@
 			editable: true,
 			//dayNames: [ 'Heyy', 'Myy', 'Name', 'Isss', 'Adam', 'Robbert', 'Shaw' ],
 			//dayNamesShort: [ 'Hey', 'My', 'Nam', 'Is', 'Ada', 'M', 'Sha' ],
+
+			//firstDay: 3,
+
 			events: [
 				{
 					title: 'multievent',
@@ -86,10 +89,13 @@
 					url: 'http://google.com/'
 				}
 			],
+
+			//timezone: 'local',
+
 			weekNumbers: true,
-			//utc: true,
-			dayClick: function(date) {
+			dayClick: function(date, allDay, jsEvent, view) {
 				console.log('dayClick', date.format());
+				console.log('view', view.getStart().format(), view.getEnd().format());
 			},
 			selectable: true,
 			select: function(start, end, allDay) {

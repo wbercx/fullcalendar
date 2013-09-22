@@ -122,7 +122,11 @@ function Calendar(element, instanceOptions) {
 	if (options.dayNamesShort) {
 		langData._weekdaysShort = options.dayNamesShort;
 	}
-	// TODO: what about firstDay ???
+	if (options.firstDay) {
+		var _week = createObject(langData._week);
+		_week.dow = options.firstDay;
+		langData._week = _week;
+	}
 
 
 	function applyLang(mom) {
