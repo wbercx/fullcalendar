@@ -1,10 +1,16 @@
 
 var dayIDs = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
+
 moment.fn.weekday = function (input) { // bugfix
 	var weekday = (this.day() + 7 - this.lang()._week.dow) % 7;
 	return input == null ? weekday : this.add("d", input - weekday);
 };
+
+
+function hasTime(mom) {
+	return mom.hours() || mom.minutes() || mom.seconds() || mom.milliseconds();
+}
 
 
 

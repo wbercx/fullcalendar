@@ -25,27 +25,28 @@ var defaults = {
 	//disableDragging: false,
 	//disableResizing: false,
 	
-	allDayDefault: true,
-	
 	// event ajax
 	lazyFetching: true,
 	startParam: 'start',
 	endParam: 'end',
 	timezoneParam: 'timezone',
+
+	showMonthAfterYear: false,
+	yearSuffix: '',
 	
 	// time formats
 	titleFormat: {
-		month: 'MMMM YYYY', //'MMMM yyyy', // TODO: make i18n somehow!
-		week: 'll', //"MMM d[ yyyy]{ '&#8212;'[ MMM] d yyyy}",
-		day: 'LL' //'dddd, MMM d, yyyy' // TODO: add day-of-week somehow!
+		month: generateMonthTitleFormat,
+		week: 'll', // like "Sep 4 1986"
+		day: 'LL' // like "September 4 1986"
 	},
 	columnFormat: {
-		month: 'ddd',
-		week: 'ddd M/D',
-		day: 'dddd M/D'
+		month: 'ddd', // like "Sat"
+		week: 'ddd', // like "Sat" // too vague, but at least English will override this (below)
+		day: 'dddd' // like "Saturday"
 	},
 	timeFormat: { // for event elements
-		'': 'h(:mm)aa' //'h(:mm)t' // default
+		'': generateShortTimeFormat
 	},
 	
 	// locale
@@ -84,6 +85,34 @@ var defaults = {
 	
 };
 
+
+function generateMonthTitleFormat(options, langData) {
+	if (options.showMonthAfterYear) {
+		return 'YYYY[' + options.yearSuffix + '] MMMM';
+	}
+	else {
+		return 'MMMM YYYY[' + options.yearSuffix + ']';
+	}
+}
+
+
+function generateShortTimeFormat(options, langData) {
+	return langData.longDateFormat('LT')
+		.replace(':mm', '(:mm)')
+		.replace(/(\Wmm)$/, '($1)') // like above, but for foreign langs
+		.replace(/\s*a$/i, 'aa'); // make " PM" -> "p"
+}
+
+
+var langOptionHash = {
+	en: {
+		columnFormat: {
+			week: 'ddd M/D'
+		}
+	}
+};
+
+
 // right-to-left defaults
 var rtlDefaults = {
 	header: {
@@ -91,7 +120,7 @@ var rtlDefaults = {
 		center: '',
 		right: 'title'
 	},
-	buttonText: {
+	buttonHTML: {
 		prev: "<span class='fc-text-arrow'>&rsaquo;</span>",
 		next: "<span class='fc-text-arrow'>&lsaquo;</span>",
 		prevYear: "<span class='fc-text-arrow'>&raquo;</span>",

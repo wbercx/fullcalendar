@@ -1,6 +1,6 @@
 
 
-var langOptionHash = {};
+//var langOptionHash = {}; // done in defaults.js
 
 
 fc.datepickerLang = function(langCode, options) {
@@ -14,6 +14,8 @@ fc.datepickerLang = function(langCode, options) {
 	mergeOptions(langOptions, {
 		isRTL: options.isRTL,
 		weekNumberTitle: options.weekHeader,
+		showMonthAfterYear: options.showMonthAfterYear,
+		yearSuffix: options.yearSuffix,
 		buttonText: {
 			prev: options.prevText,
 			next: options.nextText,
@@ -49,6 +51,3 @@ fc.lang = function(langCode, options) {
 	// set it as the default language for FullCalendar
 	defaults.lang = langCode;
 };
-
-
-// TODO: we need to API for setting defaults, or for resetting the language

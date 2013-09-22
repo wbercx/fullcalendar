@@ -492,7 +492,7 @@ function View(element, calendar, viewName) {
 		var colCnt = t.getColCnt();
 		var segments = []; // array of segments to return
 
-		if (endDate.hours() || endDate.minutes() || endDate.seconds() || endDate.milliseconds()) {
+		if (hasTime(endDate)) {
 			endDate = endDate.clone().add('days', 1);
 		}
 

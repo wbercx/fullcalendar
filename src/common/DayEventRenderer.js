@@ -42,6 +42,7 @@ function DayEventRenderer() {
 	var dayOffsetToCellOffset = t.dayOffsetToCellOffset;
 	var calendar = t.calendar;
 	var getEventEnd = calendar.getEventEnd;
+	var formatDate = calendar.formatDate;
 
 
 	// Render `events` onto the calendar, attach mouse event handlers, and call the `eventAfterRender` callback for each.

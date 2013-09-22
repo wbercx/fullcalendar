@@ -420,15 +420,12 @@ function EventManager(options) { // assumed to be a calendar
 		if (data.allDay !== undefined) {
 			out.allDay = data.allDay;
 		}
+		else if (typeof startInput === 'string' && simpleIsoRegex.test(startInput)) {
+			out.allDay = true;
+		}
 		else {
-			out.allDay =
-				typeof startInput === 'string' &&
-				simpleIsoRegex.test(startInput) &&
-				(
-					data.end === undefined ||
-					typeof data.end === 'string' &&
-					simpleIsoRegex.test(data.end)
-				);
+			// guess
+			out.allDay = !hasTime(out.start) && (!out.end || !hasTime(out.end));
 		}
 
 		// TODO: change to plain string

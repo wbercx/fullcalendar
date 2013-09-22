@@ -7,10 +7,11 @@ setDefaults({
 
 	slotDuration: '00:30:00',
 
-	axisFormat: 'h(:mm)a',
+	axisFormat: generateShortTimeFormat,
 	timeFormat: {
-		agenda: 'h:mm'
+		agenda: generateAgendaTimeFormat
 	},
+
 	dragOpacity: {
 		agenda: .5
 	},
@@ -18,6 +19,12 @@ setDefaults({
 	maxTime: '24:00:00',
 	slotEventOverlap: true
 });
+
+
+function generateAgendaTimeFormat(options, langData) {
+	return langData.longDateFormat('LT')
+		.replace(/\s*a$/i, ''); // remove trailing AM/PM
+}
 
 
 // TODO: make it work in quirks mode (event corners, all-day height)
@@ -79,6 +86,8 @@ function AgendaView(element, calendar, viewName) {
 	var cellToDate = t.cellToDate;
 	var dateToCell = t.dateToCell;
 	var rangeToSegments = t.rangeToSegments;
+	var calendar = t.calendar;
+	var formatDate = calendar.formatDate;
 	
 	
 	// locals
@@ -726,6 +735,12 @@ function AgendaView(element, calendar, viewName) {
 	// get the Y coordinate of the given time on the given day (both Moment objects)
 	function timePosition(day, time) { // both Moment objects. day holds 00:00 of current day
 		day = day.clone().startOf('day');
+		if (time < day.clone().add(minTime)) {
+			return 0;
+		}
+		if (time >= day.clone().add(maxTime)) {
+			return slotTable.height();
+		}
 
 		var slots = (time - day - minTime) / slotDuration;
 		var slotIndex = Math.floor(slots);
@@ -747,7 +762,6 @@ function AgendaView(element, calendar, viewName) {
 			slotPartial * slotHeight; // part-way through the row
 
 		top = Math.max(top, 0);
-		top = Math.min(top, slotTable.height()); // TODO: maybe cache the height?
 
 		return top;
 	}

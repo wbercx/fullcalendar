@@ -10,9 +10,9 @@
 <script src='../lib/jquery-ui/ui/jquery-ui.js'></script>
 <script src='../build/out/fullcalendar.js'></script>
 <!--
-<script src='../build/out/lang/en-gb.js'></script>
 <script src='../build/out/lang/ar.js'></script>
 <script src='../build/out/lang/fr.js'></script>
+<script src='../build/out/lang/en-gb.js'></script>
 <script src='../build/out/lang/zh-cn.js'></script>
 -->
 <script>
@@ -30,7 +30,7 @@
 				center: 'title',
 				right: 'month,agendaWeek,agendaDay'
 			},
-			defaultView: 'agendaWeek',
+			//defaultView: 'agendaWeek',
 			editable: true,
 			//dayNames: [ 'Heyy', 'Myy', 'Name', 'Isss', 'Adam', 'Robbert', 'Shaw' ],
 			//dayNamesShort: [ 'Hey', 'My', 'Nam', 'Is', 'Ada', 'M', 'Sha' ],
@@ -43,6 +43,8 @@
 				next: false
 			},
 			*/
+
+			//lang: 'en-gb',
 
 			events: [
 				{
@@ -97,7 +99,7 @@
 				}
 			],
 
-			timezone: 'local',
+			//timezone: 'local',
 
 			weekNumbers: true,
 			dayClick: function(date, allDay, jsEvent, view) {

@@ -135,7 +135,17 @@ function Calendar(element, instanceOptions) {
 
 
 	t.formatRange = function(m1, m2, formatStr, separator) {
+		if ($.isFunction(formatStr)) {
+			formatStr = formatStr.call(t, options, langData);
+		}
 		return formatRange(m1, m2, formatStr, separator, options.isRTL);
+	};
+
+	t.formatDate = function(mom, formatStr) {
+		if ($.isFunction(formatStr)) {
+			formatStr = formatStr.call(t, options, langData);
+		}
+		return formatDate(mom, formatStr);
 	};
 
 
