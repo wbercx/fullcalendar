@@ -7,7 +7,7 @@ setDefaults({
 
 	slotDuration: '00:30:00',
 
-	axisFormat: generateShortTimeFormat,
+	axisFormat: generateAgendaAxisFormat,
 	timeFormat: {
 		agenda: generateAgendaTimeFormat
 	},
@@ -19,6 +19,14 @@ setDefaults({
 	maxTime: '24:00:00',
 	slotEventOverlap: true
 });
+
+
+function generateAgendaAxisFormat(options, langData) {
+	return langData.longDateFormat('LT')
+		.replace(':mm', '(:mm)')
+		.replace(/(\Wmm)$/, '($1)') // like above, but for foreign langs
+		.replace(/\s*a$/i, 'a'); // make " PM" -> "pm"
+}
 
 
 function generateAgendaTimeFormat(options, langData) {

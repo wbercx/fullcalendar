@@ -52,9 +52,9 @@ var defaults = {
 	// locale
 	isRTL: false,
 	buttonText: {
-		prev: "previous",
+		prev: "prev",
 		next: "next",
-		prevYear: "previous year",
+		prevYear: "prev year",
 		nextYear: "next year",
 		today: 'today',
 		month: 'month',
@@ -62,7 +62,7 @@ var defaults = {
 		day: 'day'
 	},
 
-	buttonHTML: {
+	buttonHTML: { // TODO: rejigger buttonIcons instead of doing this
 		prev: "<span class='fc-text-arrow'>&lsaquo;</span>",
 		next: "<span class='fc-text-arrow'>&rsaquo;</span>",
 		prevYear: "<span class='fc-text-arrow'>&laquo;</span>",
