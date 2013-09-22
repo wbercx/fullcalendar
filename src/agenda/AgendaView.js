@@ -2,7 +2,8 @@
 setDefaults({
 	allDaySlot: true,
 	allDayText: 'all-day',
-	firstHour: 6,
+
+	scrollTime: '06:00:00',
 
 	slotDuration: '00:30:00',
 
@@ -517,7 +518,7 @@ function AgendaView(element, calendar, viewName) {
 
 	function resetScroll() {
 		var d0 = t.start.clone();
-		var scrollDate = d0.clone().hours(opt('firstHour'));
+		var scrollDate = d0.clone().add(moment.duration(opt('scrollTime')));
 		var top = timePosition(d0, scrollDate) + 1; // +1 for the border
 
 		function scroll() {
