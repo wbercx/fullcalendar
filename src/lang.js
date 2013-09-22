@@ -3,7 +3,7 @@
 //var langOptionHash = {}; // done in defaults.js
 
 
-fc.datepickerLang = function(langCode, options) {
+fc.datepickerLang = function(langCode, datepickerLangCode, options) {
 	var langOptions = langOptionHash[langCode];
 
 	if (!langOptions) {
@@ -23,17 +23,10 @@ fc.datepickerLang = function(langCode, options) {
 		}
 	});
 
-	// pass settings along to datepicker if available
+	// register the language with datepicker and set it as the default
 	if ($.datepicker) {
-
-		// datepicker uses "fr-CA" instead of "fr-ca"
-		langCode = langCode.replace(/\-(\w+)/, function(m0, m1) {
-			return '-' + m1.toUpperCase();
-		});
-
-		// register the language with datepicker and set it as the default
 		$.datepicker.setDefaults(
-			$.datepicker.regional[langCode] = options
+			$.datepicker.regional[datepickerLangCode] = options
 		);
 	}
 };
@@ -46,7 +39,7 @@ fc.lang = function(langCode, options) {
 		langOptions = langOptionHash[langCode] = {};
 	}
 
-	mergeOptions(langOptions, options);
+	mergeOptions(langOptions, options || {});
 
 	// set it as the default language for FullCalendar
 	defaults.lang = langCode;
