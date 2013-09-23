@@ -12,6 +12,8 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('lumbar');
 
+	grunt.loadTasks('tasks');
+
 	// Parse config files
 	var packageConfig = grunt.file.readJSON('package.json');
 	var pluginConfig = grunt.file.readJSON('fullcalendar.jquery.json');
