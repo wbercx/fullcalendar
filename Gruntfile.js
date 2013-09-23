@@ -12,8 +12,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('lumbar');
 
-	grunt.loadTasks('tasks');
-
 	// Parse config files
 	var packageConfig = grunt.file.readJSON('package.json');
 	var pluginConfig = grunt.file.readJSON('fullcalendar.jquery.json');
@@ -78,6 +76,36 @@ module.exports = function(grunt) {
 	}
 
 	config.clean.modules = 'build/out/*';
+
+
+
+	/* Languages
+	----------------------------------------------------------------------------------------------------*/
+
+	config.languages = {
+		moment: 'lib/moment/lang/',
+		datepicker: 'lib/jquery-ui/ui/i18n/',
+		fullCalendar: 'lang/',
+		dest: 'build/out/lang/'
+	};
+
+	//config.concat.languages = {
+	//	src: 'build/out/lang/*.js',
+	//	dest: 'build/out/langs.js'
+	//};
+
+	config.uglify.languages = {
+		options: {
+			preserveComments: 'all'
+		},
+		expand: true,
+		cwd: 'build/out/lang/',
+		src: '*.js',
+		dest: 'build/out/min/lang/',
+		ext: '.min.js'
+	};
+
+	config.clean.languages = 'build/out/lang/*';
 
 
 
@@ -255,4 +283,7 @@ module.exports = function(grunt) {
 
 	// finally, give grunt the config object...
 	grunt.initConfig(config);
+
+
+	grunt.loadTasks('tasks');
 };
