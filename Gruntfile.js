@@ -82,30 +82,30 @@ module.exports = function(grunt) {
 	/* Languages
 	----------------------------------------------------------------------------------------------------*/
 
-	config.languages = {
+	grunt.registerTask('languages', [
+		'clean:languages',
+		'generateLanguages',
+		'uglify:languages'
+	]);
+
+	config.generateLanguages = {
 		moment: 'lib/moment/lang/',
 		datepicker: 'lib/jquery-ui/ui/i18n/',
 		fullCalendar: 'lang/',
 		dest: 'build/out/lang/'
 	};
 
-	//config.concat.languages = {
-	//	src: 'build/out/lang/*.js',
-	//	dest: 'build/out/langs.js'
-	//};
-
 	config.uglify.languages = {
-		options: {
-			preserveComments: 'all'
-		},
 		expand: true,
 		cwd: 'build/out/lang/',
 		src: '*.js',
-		dest: 'build/out/min/lang/',
-		ext: '.min.js'
+		dest: 'build/out/lang-min/'
 	};
 
-	config.clean.languages = 'build/out/lang/*';
+	config.clean.languages = [
+		'build/out/lang/*',
+		'build/out/lang-min/*'
+	];
 
 
 
