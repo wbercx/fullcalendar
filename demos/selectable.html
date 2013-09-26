@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset='utf-8' />
 <link href='../build/out/fullcalendar.css' rel='stylesheet' />
 <link href='../build/out/fullcalendar.print.css' rel='stylesheet' media='print' />
+<script src='../lib/moment/moment.js'></script>
 <script src='../lib/jquery/jquery.js'></script>
 <script src='../lib/jquery-ui/ui/jquery-ui.js'></script>
 <script src='../build/out/fullcalendar.js'></script>
@@ -39,6 +41,7 @@
 				calendar.fullCalendar('unselect');
 			},
 			editable: true,
+			timezone: 'local',
 			events: [
 				{
 					title: 'All Day Event',
@@ -97,12 +100,12 @@
 		text-align: center;
 		font-size: 14px;
 		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
-		}
+	}
 
 	#calendar {
 		width: 900px;
 		margin: 0 auto;
-		}
+	}
 
 </style>
 </head>

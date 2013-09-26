@@ -77,8 +77,7 @@ function Calendar(element, instanceOptions) {
 
 
 	t.idealMoment = function() {
-		var mom = t.moment.apply(t, arguments);
-		// are we sure this should accept anything???
+		var mom = moment.apply(null, arguments);
 
 		if (mom.isValid()) {
 			return t.utcMoment(mom.toArray());
@@ -90,8 +89,6 @@ function Calendar(element, instanceOptions) {
 
 		if (!moment.isMoment(mom)) {
 			mom = moment.utc.apply(moment, arguments);
-			// should we have this? should we accept date strings with timezone indicators?
-			// related to dayClick date-date="asdfasdf"
 		}
 
 		if (mom.isValid()) {

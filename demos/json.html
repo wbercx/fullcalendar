@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset='utf-8' />
 <link href='../build/out/fullcalendar.css' rel='stylesheet' />
 <link href='../build/out/fullcalendar.print.css' rel='stylesheet' media='print' />
 <script src='../lib/moment/moment.js'></script>
@@ -12,12 +13,10 @@
 	$(document).ready(function() {
 	
 		$('#calendar').fullCalendar({
-
-			timezone: 'Europe/Zurich',
 		
 			editable: true,
 			
-			events: "json-events.php",
+			events: "php/get-events.php",
 			
 			eventDrop: function(event, delta) {
 				alert(event.title + ' was moved ' + delta + ' days\n' +
@@ -41,24 +40,24 @@
 		text-align: center;
 		font-size: 14px;
 		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
-		}
+	}
 		
 	#loading {
 		position: absolute;
 		top: 5px;
 		right: 5px;
-		}
+	}
 
 	#calendar {
 		width: 900px;
 		margin: 0 auto;
-		}
+	}
 
 </style>
 </head>
 <body>
 <div id='loading' style='display:none'>loading...</div>
 <div id='calendar'></div>
-<p>json-events.php needs to be running in the same directory.</p>
+<p>php/get-events.php needs to be running.</p>
 </body>
 </html>

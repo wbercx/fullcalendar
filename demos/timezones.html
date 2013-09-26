@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<link href='../build/out/fullcalendar.css' rel='stylesheet' />
+<link href='../build/out/fullcalendar.print.css' rel='stylesheet' media='print' />
+<script src='../lib/moment/moment.js'></script>
+<script src='../lib/jquery/jquery.js'></script>
+<script src='../lib/jquery-ui/ui/jquery-ui.js'></script>
+<script src='../build/out/fullcalendar.js'></script>
+<script>
+
+	function renderCalendar(timezone) {
+		$('#calendar').fullCalendar({
+			timezone: timezone,
+			date: '2013-09-25',
+			defaultView: 'agendaWeek',
+			header: {
+				left: 'prev,next today',
+				center: 'title',
+				right: 'month,agendaWeek,agendaDay'
+			},
+			editable: true,
+			events: 'php/get-timezone-events.php'
+		});
+	}
+
+
+	function rerenderCalendar(timezone) {
+		$('#calendar').fullCalendar('destroy');
+		renderCalendar(timezone);
+	}
+
+
+	function addAvailableTimezones() {
+		$.getJSON('php/get-timezones.php', function(timezones) {
+			$.each(timezones, function(i, timezone) {
+				if (timezone != 'UTC') { // exclude, because it's already in the list
+					$('#timezone-chooser').append(
+						$("<option/>").text(timezone).attr('value', timezone)
+					);
+				}
+			});
+		});
+	}
+
+
+	$(function() {
+
+		renderCalendar(false);
+
+		$('#timezone-chooser').on('change', function() {
+			rerenderCalendar(this.value || false);
+		});
+
+		addAvailableTimezones();
+
+	});
+
+</script>
+<style>
+
+	body {
+		font-size: 14px;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+	}
+
+	#calendar {
+		width: 900px;
+		margin: 40px auto;
+	}
+
+</style>
+</head>
+<body>
+
+	<select id='timezone-chooser'>
+		<option value=''>none</option>
+		<option value='local'>local</option>
+		<option value='UTC'>UTC</option>
+	</select>
+
+	<div id='calendar'></div>
+
+	<p style='text-align:center'>
+		php/get-timezone-events.php needs to be running.
+	</p>
+
+</body>
+</html>

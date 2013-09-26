@@ -33,7 +33,10 @@ module.exports = function(grunt) {
 	grunt.registerTask('default', 'archive');
 
 	// Bare minimum for debugging
-	grunt.registerTask('dev', 'lumbar:build');
+	grunt.registerTask('dev', [
+		'lumbar:build',
+		'generateLanguages'
+	]);
 
 
 
@@ -41,6 +44,7 @@ module.exports = function(grunt) {
 	----------------------------------------------------------------------------------------------------*/
 
 	grunt.registerTask('modules', 'Build the FullCalendar modules', [
+		'clean:modules',
 		'lumbar:build',
 		'concat:moduleVariables',
 		'uglify:modules'
@@ -75,7 +79,7 @@ module.exports = function(grunt) {
 		ext: '.min.js'
 	}
 
-	config.clean.modules = 'build/out/*';
+	config.clean.modules = 'build/out/*.{js,css}';
 
 
 
@@ -113,10 +117,12 @@ module.exports = function(grunt) {
 	----------------------------------------------------------------------------------------------------*/
 
 	grunt.registerTask('archive', 'Create a distributable ZIP archive', [
-		'clean:modules',
 		'clean:archive',
 		'modules',
+		'languages',
 		'copy:archiveModules',
+		'copy:archiveLanguages',
+		'copy:archiveMoment',
 		'copy:archiveJQuery',
 		'concat:archiveJQueryUI',
 		'copy:archiveDemos',
@@ -131,6 +137,18 @@ module.exports = function(grunt) {
 		cwd: 'build/out/',
 		src: [ '*.js', '*.css' ],
 		dest: 'build/archive/fullcalendar/'
+	};
+
+	config.copy.archiveLanguages = {
+		expand: true,
+		cwd: 'build/out/lang-min/',
+		src: '*.js',
+		dest: 'build/archive/fullcalendar/lang/'
+	};
+
+	config.copy.archiveMoment = {
+		src: 'lib/moment/min/moment.min.js',
+		dest: 'build/archive/lib/moment.min.js'
 	};
 
 	config.copy.archiveJQuery = {
@@ -159,7 +177,7 @@ module.exports = function(grunt) {
 				return content;
 			}
 		},
-		src: 'demos/*',
+		src: 'demos/**',
 		dest: 'build/archive/'
 	};
 
@@ -168,14 +186,15 @@ module.exports = function(grunt) {
 		expand: true,
 		cwd: 'lib/jquery-ui/themes/cupertino/',
 		src: [ 'jquery-ui.min.css', 'images/*' ],
-		dest: 'build/archive/demos/cupertino/'
+		dest: 'build/archive/lib/cupertino/'
 	};
 
 	// in demo HTML, rewrites paths to work in the archive
 	function transformDemoPath(path) {
+		path = path.replace('../lib/moment/moment.js', '../lib/moment.min.js');
 		path = path.replace('../lib/jquery/jquery.js', '../lib/jquery.min.js');
 		path = path.replace('../lib/jquery-ui/ui/jquery-ui.js', '../lib/jquery-ui.custom.min.js');
-		path = path.replace('../lib/jquery-ui/themes/', '');
+		path = path.replace('../lib/jquery-ui/themes/cupertino/', '../lib/cupertino/');
 		path = path.replace('../build/out/', '../fullcalendar/');
 		path = path.replace('/fullcalendar.js', '/fullcalendar.min.js');
 		return path;
@@ -207,7 +226,6 @@ module.exports = function(grunt) {
 	----------------------------------------------------------------------------------------------------*/
 
 	grunt.registerTask('bower', 'Build the FullCalendar Bower component', [
-		'clean:modules',
 		'clean:bower',
 		'modules',
 		'copy:bowerModules',
@@ -250,7 +268,6 @@ module.exports = function(grunt) {
 	----------------------------------------------------------------------------------------------------*/
 
 	grunt.registerTask('cdnjs', 'Build files for CDNJS\'s hosted version of FullCalendar', [
-		'clean:modules',
 		'clean:cdnjs',
 		'modules',
 		'copy:cdnjsModules',

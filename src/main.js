@@ -48,7 +48,8 @@ function mergeOptions(target) {
 	for (var i=1; i<arguments.length; i++) {
 		$.each(arguments[i], function(name, value) {
 			if ($.isPlainObject(value) && $.isPlainObject(target[name])) {
-				mergeOptions(target[name], value);
+				// merge into a new object to avoid destruction
+				target[name] = mergeOptions({}, target[name], value);
 			}
 			else if (value !== undefined) { // don't use values that are set, but undefined
 				target[name] = value;

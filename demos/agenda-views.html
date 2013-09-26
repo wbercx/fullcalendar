@@ -4,17 +4,10 @@
 <meta charset='utf-8' />
 <link href='../build/out/fullcalendar.css' rel='stylesheet' />
 <link href='../build/out/fullcalendar.print.css' rel='stylesheet' media='print' />
-<link href='../lib/jquery-ui/themes/cupertino/jquery-ui.min.css' rel='stylesheet' />
 <script src='../lib/moment/moment.js'></script>
 <script src='../lib/jquery/jquery.js'></script>
 <script src='../lib/jquery-ui/ui/jquery-ui.js'></script>
 <script src='../build/out/fullcalendar.js'></script>
-<!--
-<script src='../build/out/lang/ar.js'></script>
-<script src='../build/out/lang/fr.js'></script>
-<script src='../build/out/lang/en-gb.js'></script>
-<script src='../build/out/lang/zh-cn.js'></script>
--->
 <script>
 
 	$(document).ready(function() {
@@ -30,37 +23,17 @@
 				center: 'title',
 				right: 'month,agendaWeek,agendaDay'
 			},
-			//defaultView: 'agendaWeek',
 			editable: true,
-			//dayNames: [ 'Heyy', 'Myy', 'Name', 'Isss', 'Adam', 'Robbert', 'Shaw' ],
-			//dayNamesShort: [ 'Hey', 'My', 'Nam', 'Is', 'Ada', 'M', 'Sha' ],
-
-			//firstDay: 3,
-
-			/*
-			buttonHTML: {
-				prev: false,
-				next: false
-			},
-			*/
-
-			//lang: 'en-gb',
-
+			timezone: 'local',
 			events: [
-				{
-					title: 'multievent',
-					start: '2013-09-15',
-					end: '2013-09-17',
-					allDay: true
-				},
 				{
 					title: 'All Day Event',
 					start: new Date(y, m, 1)
 				},
 				{
 					title: 'Long Event',
-					start: '2013-09-16',
-					end: '2013-09-20'
+					start: new Date(y, m, d-5),
+					end: new Date(y, m, d-2)
 				},
 				{
 					id: 999,
@@ -97,28 +70,8 @@
 					end: new Date(y, m, 29),
 					url: 'http://google.com/'
 				}
-			],
-
-			//timezone: 'local',
-
-			weekNumbers: true,
-			dayClick: function(date, allDay, jsEvent, view) {
-				console.log('dayClick', date.format());
-				console.log('view', view.getStart().format(), view.getEnd().format());
-			},
-			selectable: true,
-			select: function(start, end, allDay) {
-				console.log('select', start.format(), end.format(), allDay);
-			},
-			selectHelper: true
-			//theme: true,
-			//lang: 'fr'
-			//lang: 'zh-cn'
-			//lang: 'ar'
-			//lang: 'en-gb'
+			]
 		});
-
-		$('input[type=text]').datepicker();
 		
 	});
 
@@ -126,20 +79,20 @@
 <style>
 
 	body {
-		margin-top: 10px;
+		margin-top: 40px;
+		text-align: center;
 		font-size: 14px;
 		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
-		}
+	}
 
 	#calendar {
 		width: 900px;
-		margin: 40px auto;
-		}
+		margin: 0 auto;
+	}
 
 </style>
 </head>
 <body>
-<input type='text' />
 <div id='calendar'></div>
 </body>
 </html>

@@ -11,21 +11,22 @@
 <script src='../build/out/lang/all.js'></script>
 <script>
 
-	$(document).ready(function() {
-	
+	function renderCalendar(langCode) {
 		var date = new Date();
 		var d = date.getDate();
 		var m = date.getMonth();
 		var y = date.getFullYear();
 		
 		$('#calendar').fullCalendar({
+			lang: langCode,
+			defaultView: 'agendaWeek',
 			header: {
 				left: 'prev,next today',
 				center: 'title',
 				right: 'month,agendaWeek,agendaDay'
 			},
 			editable: true,
-			lang: 'ar',
+			timezone: 'local',
 			events: [
 				{
 					title: 'All Day Event',
@@ -73,23 +74,59 @@
 				}
 			]
 		});
+	}
+
+	function rerenderCalendar(langCode) {
+		$('#calendar').fullCalendar('destroy');
+		renderCalendar(langCode);
+	}
+
+
+	function renderLangChooser(defaultLangCode) {
+
+		var select = $('<select/>');
+
+		$.each($.fullCalendar.langs, function(langCode) {
+			select.append(
+				$('<option/>')
+					.attr('value', langCode)
+					.text(langCode)
+			);
+		});
+
+		select.find('option[value="' + defaultLangCode + '"]')
+			.prop('selected', true);
+
+		select.on('change', function() {
+			rerenderCalendar(this.value);
+		});
 		
+		return select;
+	}
+
+
+	$(document).ready(function() {
+
+		$('body').prepend(
+			renderLangChooser('en')
+		);
+
+		renderCalendar('en');
 	});
+
 
 </script>
 <style>
 
 	body {
-		margin-top: 40px;
-		text-align: center;
 		font-size: 14px;
 		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
-		}
+	}
 
 	#calendar {
 		width: 900px;
-		margin: 0 auto;
-		}
+		margin: 40px auto;
+	}
 
 </style>
 </head>

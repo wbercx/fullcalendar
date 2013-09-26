@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset='utf-8' />
 <link href='../build/out/fullcalendar.css' rel='stylesheet' />
 <link href='../build/out/fullcalendar.print.css' rel='stylesheet' media='print' />
 <script src='../lib/moment/moment.js'></script>
@@ -13,16 +14,9 @@
 	$(document).ready(function() {
 	
 		$('#calendar').fullCalendar({
-
-			//timezone: 'Europe/Zurich',
-			//timezone: 'America/Chicago',
-			timezone: 'UTC',
 		
 			// US Holidays
-			eventSources: [
-				'http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic',
-				'https://www.google.com/calendar/feeds/adamrshaw%40gmail.com/private-b5f43dec68f4e5ab7c158285d6d6780a/basic'
-			],
+			events: 'http://www.google.com/calendar/feeds/usa__en%40holiday.calendar.google.com/public/basic',
 			
 			eventClick: function(event) {
 				// opens events in a popup window
@@ -50,18 +44,18 @@
 		text-align: center;
 		font-size: 14px;
 		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
-		}
+	}
 		
 	#loading {
 		position: absolute;
 		top: 5px;
 		right: 5px;
-		}
+	}
 
 	#calendar {
 		width: 900px;
 		margin: 0 auto;
-		}
+	}
 
 </style>
 </head>

@@ -2,6 +2,8 @@
 
 //var langOptionHash = {}; // done in defaults.js
 
+fc.langs = langOptionHash;
+
 
 fc.datepickerLang = function(langCode, datepickerLangCode, options) {
 	var langOptions = langOptionHash[langCode];

@@ -1,5 +1,7 @@
 <?php
 
+	date_default_timezone_set('UTC');
+
 	$year = date('Y');
 	$month = date('m');
 
